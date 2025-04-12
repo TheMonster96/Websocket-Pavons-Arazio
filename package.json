@@ -1,0 +1,25 @@
+{
+  "name": "websocket-pavons-arazio",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node ./server",
+    "client": "node ./client/client"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TheMonster96/Websocket-Pavons-Arazio.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TheMonster96/Websocket-Pavons-Arazio/issues"
+  },
+  "homepage": "https://github.com/TheMonster96/Websocket-Pavons-Arazio#readme",
+  "description": "",
+  "devDependencies": {
+    "ws": "^8.18.1"
+  }
+}
