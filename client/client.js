@@ -1,8 +1,9 @@
 //const form_button=document.getElementById("form_button")
 
 const shelly_button=document.getElementById("shelly_button")
+const shelly_button2=document.getElementById("shelly_button2")
 
-const ws=new WebSocket("ws://192.168.1.125/rpc")
+const ws=new WebSocket("ws://localhost:8888")
 console.log(ws)
 
 let state=false
@@ -15,12 +16,7 @@ shelly_button.addEventListener('click', (e) => {
     e.preventDefault()
 
     ws.send(JSON.stringify({
-        id: 1,
-        src: "user",
-        method: "Switch.Toggle",
-        params: {
-            id:0
-        }
+        dest: "2"
     }))
 
     //state=!state
@@ -33,6 +29,12 @@ shelly_button.addEventListener('click', (e) => {
     // document.body.appendChild(vForm)
     // vForm.submit()
 
+})
+
+shelly_button.addEventListener('click', (e) => {
+    e.preventDefault()
+
+    ws.send(JSON.stringify({msg: "Toggle Switch"}))
 })
 
 /*form_button.addEventListener("click", (e) => {

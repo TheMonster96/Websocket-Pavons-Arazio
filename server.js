@@ -1,7 +1,13 @@
 import { WebSocketServer } from "ws";
 import e, { json } from "express";
 import cors from "cors"
-//import {createServer} from 'http'
+import { writeFile } from "fs/promises";
+import { readDevices } from "./initializeDevices.js";
+import { arrayBuffer } from "stream/consumers";
+
+
+let shelly_devices=await readDevices()
+console.log(shelly_devices)
 
 let i=0
 const app=e()
@@ -31,26 +37,6 @@ app.get('/', (req, res) => {
     res.render('index')
 })
 
-// app.get('/shelly', async (req, res) => {
-
-//     let message=""
-//     const response= await fetch("http://192.168.1.125/rpc/Ws.GetConfig")
-
-//     const response_data=await response.json()
-
-//     if(response_data.code){
-//         response_data.code === -105 ? (message= "Error, something went wrong " + JSON.stringify(response_data)) : message=""
-//     }
-//     else if (response_data.was_on){
-//         response_data.was_on == true ? message= "Shelly has been turned off" : message= "Shelly has been turned on"
-//     }
-//     else 
-//         message=JSON.stringify(response_data)
-
-//     res.render('shelly', {message: message})
-// })
-
-
 
 const wsS= new WebSocketServer({port: 8888}, (e) => {
     if(e)
@@ -59,50 +45,68 @@ const wsS= new WebSocketServer({port: 8888}, (e) => {
         console.log("Server started at 8888")
 })
 
-let state=false
 
 wsS.on('connection', function(socket, req) {
-    console.log("Socket connesos")
-    socket.send(JSON.stringify(state))
+    console.log("WebSocket connesso")
+    //socket.send(JSON.stringify(state))
+    //writeFile("./websocket.log", JSON.stringify(wsS.clients)).then( "wrote to file").catch((e) => {console.log(e)})
+    //console.log(wsS.clients)
+    //console.log(req.rawHeaders)
+    console.log(req.headers)
 
-    socket.on("message", async (data) =>{
+    if(req.headers['sec-websocket-protocol'] == 'json-rpc' && req.headers['user-agent'].includes('(ShellyOS)')){
+        socket.is_shelly=true;
+        socket.remoteAddress=req.socket.remoteAddress.substring(7)
+        socket.which_shelly=shelly_devices.get(socket.remoteAddress)
+        //socket.mac_address=req.socket
+        console.log(socket)
+    }
+    else {
+        socket.is_client=true;
+        let remoteAddress=req.socket.remoteAddress.substring(7)
+        socket.remoteAddress=(remoteAddress==='') ?  "::1" : remoteAddress 
+        console.log(socket)
+    }
+
+    
+
+    /*socket.on("message", async (data) =>{
 
         const message= JSON.parse(data)
+        console.log(req.socket.remoteAddress.slice(7, req.socket.remoteAddress.length))
+        console.log(message)
         
-        console.log(typeof message)
-        if(message instanceof Object && message.params['switch:0'] !== undefined && message.params['switch:0'] != state){
-            console.log(message.params['switch:0'])
-            state= message.params['switch:0'].output
-            console.log(state)
+        if(message.dest !== undefined){
+            
+        }
+
+        //console.log(typeof message)
+        else if(message instanceof Object && message.params!== undefined ){
+            if(message.params['switch:0'] !== undefined){
+                console.log(message.params['switch:0'])
+            }
+           
+        }
+        else{
+            console.log(message)
+            socket.send(data.toJSON())
+        }
+        
+        if(message instanceof Object && message.output !== undefined){
+            console.log(message)
+            state=message.output
+             console.log(state)
             wsS.clients.forEach(client => {
                 if(client != socket)
                     client.send((JSON.stringify(state)))
             })
         }
-        else
+        else{
             console.log(message)
-            socket.send(data.toJSON())
-
-        console.log(req.socket.remoteAddress)
-
-        
-        // let message=""
-        // const response= await fetch("http://192.168.1.125/rpc/Switch.toggle?id=0")
-
-        // const response_data=await response.json()
-
-        // if(response_data.code){
-        //     response_data.code === -105 ? (message= "Error, something went wrong " + JSON.stringify(response_data)) : message=""
-        // }
-        // else if (response_data.was_on){
-        //     response_data.was_on == true ? message= "Shelly has been turned off" : message= "Shelly has been turned on"
-        // }
-        // else 
-        //     message=JSON.stringify(response_data)
-
-        //socket.send(message)
-    })
+        }*/
 })
+
+//})
 
 app.listen(3000, (e) => {
     if(e)
