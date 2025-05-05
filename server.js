@@ -6,6 +6,17 @@ import { readDevices } from "./initializeDevices.js";
 import { arrayBuffer } from "stream/consumers";
 
 
+function getValueByKey(map , search_value)
+{
+    for( const [key, value] in map.entries()){
+        if(Object.is(value, search_value))
+                return key
+    }
+
+    return undefined
+}
+
+
 let shelly_devices=await readDevices()
 console.log(shelly_devices)
 
@@ -25,7 +36,7 @@ app.use(cors( {
             callback(null, true)
         }
         else{
-            callback(new Error("Not allowed porcoddio"))
+            callback(new Error("Not allowed"))
         }
     },
     methods: "GET,PUT,POST,DELETE",
@@ -34,7 +45,7 @@ app.use(cors( {
 
 
 app.get('/', (req, res) => {
-    res.render('index')
+    res.render('index', {shelly_devices: shelly_devices})
 })
 
 
@@ -48,62 +59,42 @@ const wsS= new WebSocketServer({port: 8888}, (e) => {
 
 wsS.on('connection', function(socket, req) {
     console.log("WebSocket connesso")
-    //socket.send(JSON.stringify(state))
-    //writeFile("./websocket.log", JSON.stringify(wsS.clients)).then( "wrote to file").catch((e) => {console.log(e)})
-    //console.log(wsS.clients)
-    //console.log(req.rawHeaders)
-    console.log(req.headers)
 
     if(req.headers['sec-websocket-protocol'] == 'json-rpc' && req.headers['user-agent'].includes('(ShellyOS)')){
-        socket.is_shelly=true;
-        socket.remoteAddress=req.socket.remoteAddress.substring(7)
-        socket.which_shelly=shelly_devices.get(socket.remoteAddress)
-        //socket.mac_address=req.socket
-        console.log(socket)
+        const address=req.socket.remoteAddress.substring(7)
+        socket.connected_device_information={ is_shelly : true, remote_address : address, which_shelly: shelly_devices.get(address)}
     }
     else {
-        socket.is_client=true;
         let remoteAddress=req.socket.remoteAddress.substring(7)
-        socket.remoteAddress=(remoteAddress==='') ?  "::1" : remoteAddress 
-        console.log(socket)
+        
+        socket.connected_device_information={ is_client : true, remote_address : ((remoteAddress==='') ?  "::1" : remoteAddress)}
+        
     }
-
+    console.log(socket.connected_device_information)
     
 
-    /*socket.on("message", async (data) =>{
-
-        const message= JSON.parse(data)
-        console.log(req.socket.remoteAddress.slice(7, req.socket.remoteAddress.length))
-        console.log(message)
+    socket.on("message", (data) =>{
+        const message = JSON.parse(data)
         
-        if(message.dest !== undefined){
-            
-        }
+        if(message.params !== undefined)
+            if(message.params['switch:0'])
+            {
+                socket.connected_device_information.state=message.params['switch:0'].output
+                console.log(socket.connected_device_information)
 
-        //console.log(typeof message)
-        else if(message instanceof Object && message.params!== undefined ){
-            if(message.params['switch:0'] !== undefined){
-                console.log(message.params['switch:0'])
+                wsS.clients.forEach(client => {
+                    if(client.connected_device_information.is_client){
+                        client.send(JSON.stringify(socket.connected_device_information))
+                    }
+                })
             }
-           
-        }
-        else{
-            console.log(message)
-            socket.send(data.toJSON())
-        }
+
         
-        if(message instanceof Object && message.output !== undefined){
-            console.log(message)
-            state=message.output
-             console.log(state)
-            wsS.clients.forEach(client => {
-                if(client != socket)
-                    client.send((JSON.stringify(state)))
-            })
-        }
-        else{
-            console.log(message)
-        }*/
+        //message.dest ? console.log(message.dest) : console.log(message)
+
+        
+        
+    })
 })
 
 //})
