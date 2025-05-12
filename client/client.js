@@ -11,14 +11,23 @@ ws.addEventListener("open", function() {
     console.log("Connection established")
 })
 
+ws.addEventListener("error", (event) => {
+    console.log("WebSocket error" + event)
+    console.log(event.type)
+    console.log(event.target)
+})
 
 
 shelly_devices.forEach(shelly_device =>{    
     shelly_device.setAttribute('state', false)
+
     shelly_device.addEventListener('click', (e)=> {
         e.preventDefault()
 
-        const msg=JSON.stringify({dest: shelly_device.id})
+        const msg=JSON.stringify({
+            dest: shelly_device.id,
+            method: "Toggle"
+        })
         console.log(msg)
 
         ws.send(msg)
@@ -26,18 +35,6 @@ shelly_devices.forEach(shelly_device =>{
 })
 
 
-
-/*form_button.addEventListener("click", (e) => {
-    e.preventDefault()
-
-    const vForm=document.createElement("form")
-
-    vForm.setAttribute('action', '/coddio')
-    vForm.setAttribute('method', 'POST')
-
-    document.body.appendChild(vForm)
-    vForm.submit()
-})*/
 
 ws.addEventListener("message", message => {
     const msg=JSON.parse(message.data)
