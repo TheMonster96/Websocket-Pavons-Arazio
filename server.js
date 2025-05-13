@@ -21,14 +21,13 @@ import { assert } from "console";
 }*/
 
 
-const shelly_devices=await readDevices()
+const shelly_devices = await readDevices()
 console.log(shelly_devices)
 
-function getKeyByValue(/**@param {*} */ search_value)
-{   
-    for(const [key, value] of shelly_devices.entries()){
+function getKeyByValue(/**@param {*} */ search_value) {
+    for (const [key, value] of shelly_devices.entries()) {
         console.log(key, value)
-        if(Object.is(value, search_value))
+        if (Object.is(value, search_value))
             return key
     }
 
@@ -37,21 +36,21 @@ function getKeyByValue(/**@param {*} */ search_value)
 
 
 
-const app=e()
+const app = e()
 //console.log(app)
-const allowedOrigins= ["http://localhost:3000", "http://localhost:8888", "http://192.168.1.125", "http://192.168.1.2"]
+const allowedOrigins = ["http://localhost:3000", "http://localhost:8888", "http://192.168.1.125", "http://192.168.1.2"]
 
 app.set('view engine', 'hbs')
 app.set('views', './')
 
 app.use('/public', e.static('./client/'))
 
-app.use(cors( {
-    origin: function(origin, callback){
-        if(!origin || allowedOrigins.includes(origin)){
+app.use(cors({
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true)
         }
-        else{
+        else {
             callback(new Error("Not allowed"))
         }
     },
@@ -61,117 +60,166 @@ app.use(cors( {
 
 
 app.get('/', (req, res) => {
-    res.render('index', {shelly_devices: shelly_devices})
+    res.render('index', { shelly_devices: shelly_devices })
 })
 
 
-const wsS= new WebSocketServer({port: 8888}, (e) => {
-    if(e)
+const server = app.listen(3000, (e) => {
+    if (e)
+        console.error(e)
+    else
+        console.log("Server started on 3000")
+})
+
+server.on('upgrade', function (request, socket, head) {
+    console.log("New WebSocket upgrade ")
+    wsS_clients.handleUpgrade(request, socket, head, socket => {
+        wsS_clients.emit('connection', socket, request)
+    })
+})
+
+const server_options = {
+    requestCert: true,
+    rejectUnauthorized: true
+}
+
+const wsS_clients = new WebSocketServer({ server: app }, (e) => {
+    if (e)
         console.log(e)
     else
         console.log("Server started at 8888")
 })
 
-wsS.on("error", error => {
-    console.log("WS Server? error : "+ error.name)
+const wsS_shelly = new WebSocketServer({ port: 8888 }, (e) => {
+    if (e)
+        console.log(e)
+    else
+        console.log("Server started at 8888")
+})
+
+wsS_clients.on("error", error => {
+    console.log("WS Server? error : " + error.name)
     console.log(error.message)
     console.log(error.stack)
     console.log(error.cause)
 })
 
-wsS.on("wsClientError", error => {
-    console.log("WS Client error : "+ error.name)
+wsS_clients.on("wsClientError", error => {
+    console.log("WS Client error : " + error.name)
     console.log(error.message)
     console.log(error.stack)
     console.log(error.cause)
-    
+
 })
 
-wsS.on('connection', function(socket, req) {
-    console.log("WebSocket connesso")
-    //console.log(req)
+wsS_clients.on('close', () => {
+    console.log("WebSocket Client Server connection closed")
+})
 
-    if(req.headers['sec-websocket-protocol'] == 'json-rpc' && req.headers['user-agent'].includes('(ShellyOS)')){
-        const address=req.socket.remoteAddress.substring(7)
-        socket.connected_device_information={ is_shelly : true, remote_address : address, which_shelly: shelly_devices.get(address), state: false}
-        
-    }
-    else {
-        let remote_address=req.socket.remoteAddress.substring(7)
-        
-        socket.connected_device_information={ is_client : true, remote_address : ((remote_address==='') ?  "::1" : remote_address)}
+wsS_shelly.on('close', () => {
+    console.log("WebSocket Shelly Server connection closed")
+})
 
-        wsS.clients.forEach(shelly_client=> {
-            if(shelly_client.connected_device_information.is_shelly){
-                console.log(shelly_client.connected_device_information)
-                shelly_client.send(JSON.stringify({
-                    /*{
-                        "jsonrpc":"2.0",
-                        "id": 1,
-                        "src":"user_1",
-                        "method":"Switch.GetConfig",
-                        "params": {
-                            "id":2
-                        }
-                      }  
-                        */
-
-                    id: 1,
-                    src: "WS server",
-                    method: "Switch.GetStatus",
-                    params: { 
-                        id:0
-                    }
-                }))
-            }
-        })
-        
+wsS_shelly.on('connection', function (socket, req) {
+    if (req.headers['sec-websocket-protocol'] == 'json-rpc' && req.headers['user-agent'].includes('(ShellyOS)')) {
+        const address = req.socket.remoteAddress.substring(7)
+        socket.connected_device_information = { is_shelly: true, remote_address: address, which_shelly: shelly_devices.get(address), state: false }
     }
     console.log(socket.connected_device_information)
-    
 
-    socket.on("message", (data) =>{
+    socket.on('close', (code, reason) => {
+        console.log(`WebSocket shelly ${socket.connected_device_information} connection closed with code ${code} and reason ${reason}`)
+    })
+
+    socket.on('message', (data) => {
         const message = JSON.parse(data)
-        
-        if(message.params !== undefined){
-            if(message.params['switch:0']){
-                socket.connected_device_information.state=message.params['switch:0'].output
+
+        if (message.params !== undefined) {
+            if (message.params['switch:0']) {
+                socket.connected_device_information.state = message.params['switch:0'].output
                 console.log(socket.connected_device_information)
 
-                wsS.clients.forEach(client => {
-                    if(client.connected_device_information.is_client){
+                wsS_clients.clients.forEach(client => {
+                    if (client.connected_device_information.is_client) {
                         client.send(JSON.stringify(socket.connected_device_information))
                     }
                 })
             }
         }
-        else if(message.result !== undefined){
-            if(message.result.source === "WS_in"){
-                wsS.clients.forEach(client => {
-                    if(client.connected_device_information.is_client){
+        else if (message.result !== undefined) {
+            if (message.result.source === "WS_in") {
+                wsS_clients.clients.forEach(client => {
+                    if (client.connected_device_information.is_client) {
                         client.send(JSON.stringify({
-                            is_shelly: socket.connected_device_information.is_shelly, 
-                            remote_address: socket.connected_device_information.remote_address, 
-                            which_shelly: socket.connected_device_information.which_shelly, 
+                            is_shelly: socket.connected_device_information.is_shelly,
+                            remote_address: socket.connected_device_information.remote_address,
+                            which_shelly: socket.connected_device_information.which_shelly,
                             state: message.result.output
                         }))
                     }
                 })
             }
         }
-        else if(message.dest !== undefined && message.method !== undefined){
+    })
+})
+
+wsS_clients.on('connection', function (socket, req) {
+    console.log("WebSocket connesso")
+    //console.log(req)
+
+    let remote_address = req.socket.remoteAddress.substring(7)
+
+    socket.connected_device_information = { is_client: true, remote_address: ((remote_address === '') ? "::1" : remote_address) }
+
+    wsS_shelly.clients.forEach(shelly_client => {
+        if (shelly_client.connected_device_information.is_shelly) {
+            console.log(shelly_client.connected_device_information)
+            shelly_client.send(JSON.stringify({
+                /*{
+                    "jsonrpc":"2.0",
+                    "id": 1,
+                    "src":"user_1",
+                    "method":"Switch.GetConfig",
+                    "params": {
+                        "id":2
+                    }
+                  }  
+                    */
+
+                id: 1,
+                src: "WS server",
+                method: "Switch.GetStatus",
+                params: {
+                    id: 0
+                }
+            }))
+        }
+
+
+    })
+
+    console.log(socket.connected_device_information)
+
+    socket.on('close', (code, reason) => {
+        console.log(`WebSocket client ${socket.connected_device_information} connection closed with code ${code} and reason ${reason}`)
+    })
+
+    socket.on('message', (data) => {
+        const message = JSON.parse(data)
+
+        if (message.dest !== undefined && message.method !== undefined) {
             console.log(message)
-            let shelly_address=getKeyByValue(message.dest)
+            let shelly_address = getKeyByValue(message.dest)
             console.log(shelly_address)
-            if(shelly_address){
-                wsS.clients.forEach(client =>{
-                    if(client.connected_device_information.is_shelly && client.connected_device_information.remote_address === shelly_address){
+            if (shelly_address) {
+                wsS_shelly.clients.forEach(client => {
+                    if (client.connected_device_information.is_shelly && client.connected_device_information.remote_address === shelly_address) {
                         client.send(JSON.stringify({
                             id: 1,
                             src: "WS server",
                             method: "Switch.Toggle",
-                            params: { 
-                                id:0
+                            params: {
+                                id: 0
                             }
                         }))
                     }
@@ -179,30 +227,27 @@ wsS.on('connection', function(socket, req) {
                 })
             }
         }
-            //console.log(message)
-        //message.dest ? console.log(message.dest) : console.log(message)
-        /*{
-                    id: 1,
-                    src: 'shelly1minig3-543204635e0c',
-                    dst: 'WS server',
-                    result: {
-                        id: 0,
-                        source: 'WS_in',
-                        output: true,
-                        temperature: { tC: 54.6, tF: 130.2 }
-                    }
-                    }
-         */
-        
-        
     })
+
+    //console.log(message)
+    //message.dest ? console.log(message.dest) : console.log(message)
+    /*{
+                id: 1,
+                src: 'shelly1minig3-543204635e0c',
+                dst: 'WS server',
+                result: {
+                    id: 0,
+                    source: 'WS_in',
+                    output: true,
+                    temperature: { tC: 54.6, tF: 130.2 }
+                }
+                }
+     */
+
+
 })
+
 
 //})
 
-app.listen(3000, (e) => {
-    if(e)
-        console.error(e)
-    else
-        console.log("Server started on 3000")
-})
+

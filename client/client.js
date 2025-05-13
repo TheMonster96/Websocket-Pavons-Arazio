@@ -3,7 +3,7 @@
 const shelly_devices=document.querySelectorAll("img.shelly")
 console.log(shelly_devices)
 
-const ws=new WebSocket("ws://192.168.1.2:8888")
+const ws=new WebSocket("ws://192.168.1.2:3000")
 console.log(ws)
 
 
