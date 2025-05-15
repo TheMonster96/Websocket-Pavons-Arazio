@@ -1,9 +1,12 @@
 import { WebSocketServer } from "ws";
+import { createServer as HTTPSServer } from "https"
+import { createServer as HTTPServer } from "http";
 import e, { json } from "express";
 import cors from "cors"
-import { writeFile } from "fs";
+import { readFileSync, writeFile } from "fs";
 import { readDevices } from "./initializeDevices.js";
 import { assert } from "console";
+import { readFile } from "fs/promises";
 
 
 //Get value by key
@@ -19,6 +22,15 @@ import { assert } from "console";
 
     return false
 }*/
+
+
+const https_options = {
+    key: readFileSync('./server.key'),
+    //ca_cert: readFileSync('./certificates/shelly-ca.crt'),
+    cert: readFileSync('./server.cert'),
+}
+
+//console.log(https_options)
 
 
 const shelly_devices = await readDevices()
@@ -38,7 +50,7 @@ function getKeyByValue(/**@param {*} */ search_value) {
 
 const app = e()
 //console.log(app)
-const allowedOrigins = ["http://localhost:3000", "http://localhost:8888", "http://192.168.1.125", "http://192.168.1.2"]
+const allowedOrigins = ["http://localhost:3000", "http://localhost:8888", "http://192.168.1.2", "https://localhost:3000", "https://localhost:8888", "https://192.168.1.2"]
 
 app.set('view engine', 'hbs')
 app.set('views', './')
@@ -63,38 +75,42 @@ app.get('/', (req, res) => {
     res.render('index', { shelly_devices: shelly_devices })
 })
 
-
-const server = app.listen(3000, (e) => {
+/*app.listen(3000, (e) => {
     if (e)
         console.error(e)
     else
         console.log("Server started on 3000")
+})*/
+
+const serverS = HTTPSServer(https_options, app)
+
+serverS.listen(3000, (e) => {
+    if (e)
+        console.error(e)
+    else
+        console.log("https Server started on 3000")
 })
 
-server.on('upgrade', function (request, socket, head) {
+
+serverS.on('upgrade', function (request, socket, head) {
     console.log("New WebSocket upgrade ")
     wsS_clients.handleUpgrade(request, socket, head, socket => {
         wsS_clients.emit('connection', socket, request)
     })
 })
 
-const server_options = {
-    requestCert: true,
-    rejectUnauthorized: true
-}
-
 const wsS_clients = new WebSocketServer({ server: app }, (e) => {
     if (e)
         console.log(e)
     else
-        console.log("Server started at 8888")
+        console.log("WS client server started")
 })
 
 const wsS_shelly = new WebSocketServer({ port: 8888 }, (e) => {
     if (e)
         console.log(e)
     else
-        console.log("Server started at 8888")
+        console.log("WS shelly server started at 8888")
 })
 
 wsS_clients.on("error", error => {
