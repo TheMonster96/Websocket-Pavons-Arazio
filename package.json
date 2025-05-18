@@ -4,8 +4,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "nodemon ./server",
-    "client": "node ./client/client"
+    "start": "nodemon ./dist/server",
+    "compile": "npx tsc"
   },
   "repository": {
     "type": "git",
@@ -20,15 +20,19 @@
   "homepage": "https://github.com/TheMonster96/Websocket-Pavons-Arazio#readme",
   "description": "",
   "devDependencies": {
-    "express": "^5.1.0",
+    "express": "^5.0.0",
     "ws": "^8.18.1"
   },
   "dependencies": {
     "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.2",
+    "@types/ws": "^8.18.1",
     "cors": "^2.8.5",
     "fs": "^0.0.1-security",
     "fs-extra": "^11.3.0",
     "hbs": "^4.2.0",
-    "nodemon": "^3.1.9"
+    "http": "^0.0.1-security",
+    "nodemon": "^3.1.9",
+    "typescript": "^5.8.3"
   }
 }
