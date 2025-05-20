@@ -13,11 +13,6 @@ export const wsS_clients = new WebSocketServer({ server: serverS }, () => {
     console.log(wsS_clients)
 })
 
-
-
-
-
-
 //console.log(wsS_clients)
 
 wsS_clients.on("error", error => {
