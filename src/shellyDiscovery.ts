@@ -1,3 +1,4 @@
+import { rejects } from "node:assert"
 import path from "node:path"
 import { Worker } from "node:worker_threads"
 
@@ -20,13 +21,13 @@ function splitAddressIntervals(splitFactor: number): number[] {
     return splitAddresses
 }
 
-export function shellyDiscovery(splitFactor: number): JSON[] {
-    let results: JSON[] = []
-    let thread_counter = 0
+export function shellyDiscovery(splitFactor: number) {
+    return new Promise((resolve, reject) => {
+        let results: JSON[] = []
+        let thread_counter = 0
 
-    splitAddressIntervals(splitFactor).forEach((address, index, array) => {
-        if (index !== array.length - 1)
-            new Promise((resolve, reject) => {
+        splitAddressIntervals(splitFactor).forEach((address, index, array) => {
+            if (index !== array.length - 1) {
                 const worker = new Worker(path.join(__dirname, "./workerFetch.js"), {
                     workerData: {
                         baseIPAddress: baseIpAddress,
@@ -36,23 +37,42 @@ export function shellyDiscovery(splitFactor: number): JSON[] {
                 })
 
                 worker.on('message', (message) => {
-                    console.log(message)
-                    if (message instanceof Object)
+                    //console.log(message)
+                    if (message instanceof Object) {
+                        console.log(message)
                         results.push(message)
-                    else if (message === 'done')
+                        //resolve(message)
+                    }
+                    else if (typeof message === "string" && message === "done")
                         thread_counter++
-
                     if (thread_counter === splitFactor) {
+                        console.log("Resolving the array")
                         resolve(results)
                     }
+
+
+                    console.log("Workers left ", (splitFactor - thread_counter))
                     //console.log(results)
                     //console.log(message)
                 })
 
-            })
+                worker.on('error', (err) => {
+                    console.error(`Error from worker ${err}`)
+                    reject(err)
+                })
 
-    })
+                worker.on('exit', (code) => {
+                    if (code !== 0) {
+                        console.log(`Worker exited with code ${code}`)
+                        reject(new Error(`Worker exited with code ${code}`))
+                    }
 
-    return results
+                })
+
+            }
+        })
+
+    });
 }
+
 

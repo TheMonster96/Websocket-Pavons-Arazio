@@ -32,7 +32,6 @@ app.get('/', (req, res) => {
 })
 
 app.get('/shellyDiscovery', async (req, res) => {
-
     //console.log(result.text)
     res.json(await shellyDiscovery(16))
 })
