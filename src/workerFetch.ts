@@ -11,7 +11,7 @@ async function callShellyApi() {
 
     for (let address = startIPAddress; address < endIPAddress; address++) {
         try {
-            const result: Response = await fetch(`http://${baseIPAddress}${address}/rpc/Sys.GetConfig`, {
+            const resultSysConfig: Response = await fetch(`http://${baseIPAddress}${address}/rpc/Sys.GetConfig`, {
                 method: "Get",
                 headers: {
                     'Accept': "application/ json"
@@ -19,11 +19,21 @@ async function callShellyApi() {
                 signal: AbortSignal.timeout(100)
             })
 
-            if (result.ok) {
-                let json = await result.json()
+            const resultWSConfig: Response = await fetch(`http://${baseIPAddress}${address}/rpc/Ws.GetConfig`, {
+                method: "Get",
+                headers: {
+                    'Accept': "application/ json"
+                },
+                signal: AbortSignal.timeout(100)
+            })
 
-                json.address = baseIPAddress + address
-                parentPort?.postMessage(json)
+            if (resultSysConfig.ok && resultWSConfig.ok) {
+                let jsonSysConfig = await resultSysConfig.json()
+                let jsonWSConfig = await resultWSConfig.json()
+
+                jsonSysConfig.address = baseIPAddress + address
+                jsonSysConfig.websocketConfig = jsonWSConfig
+                parentPort?.postMessage(jsonSysConfig)
             }
         }
         catch (error: any) {

@@ -9,7 +9,7 @@ export default app
 const allowedOrigins = ["http://localhost:3000", "http://localhost:8888", "http://192.168.1.2", "https://localhost:3000", "https://localhost:8888", "https://192.168.1.2:3000"]
 
 app.set('view engine', 'hbs')
-app.set('views', './src/')
+app.set('views', './src/views')
 
 app.use('/public', Express.static('./src/client/'))
 
@@ -31,9 +31,18 @@ app.get('/', (req, res) => {
     res.render('index', { shelly_devices: shelly_devices })
 })
 
-app.get('/shellyDiscovery', async (req, res) => {
-    //console.log(result.text)
-    res.json(await shellyDiscovery(16))
-})
+app.route('/shellyDiscovery')
+
+    .get(async (req, res) => {
+        //console.log(result.text)
+        const results = await shellyDiscovery(16)
+        console.log(results)
+        res.render('shellyRegistration', { shelly_devices: results })
+    })
+
+    .post(async (req, res) => {
+
+    })
+
 
 

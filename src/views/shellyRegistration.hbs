@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shelly Registration</title>
+</head>
+
+<body>
+
+</body>
+{{#if shelly_devices}}
+<select name="shelly_device">
+    {{#each shelly_devices}}
+
+    <option value="{{device}}">{{device.mac}} {{websocketConfig.server}}</option>
+    {{/each}}
+</select>
+
+{{/if}}
+
+</html>
