@@ -1,9 +1,10 @@
 import { readFileSync, writeFile } from "fs";
 import { createServer as HTTPSServer, Server } from "https"
 import app from "./express-app.js";
-import Certificates from "./certInterface.js";
+//import Certificates from "./certInterface.js";
 import { wsS_clients } from "./server.js";
 import { WebSocketServer } from "ws";
+import { Certificates } from "./types.js";
 
 let serverS: Server
 

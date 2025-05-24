@@ -1,3 +1,5 @@
+
+
 **TODO: Implement logic to not return already registered shelly devices to users.**
 
 **TODO: Implement registration POST API endpoint to ShellyWSS and unregistration. TODO: Implement an update name API to change shelly devices' names.**
@@ -6,8 +8,10 @@
 
 **TODO: Implement wss:// on ShellyWSS**
 
-**TODO: Implement some sort of database or use Shelly Discovery to send the devices to the client**
+**DONE (Shelly Discovery kinda): Implement some sort of database or use Shelly Discovery to send the devices to the client**
 
-**TODO: Change UI to be somewhat decent**
+**DONE: Implement logic to dynamically inform connected clients of new Shelly connections or closed connections and then add or remove them from the web page automaically**
+
+**NON CRITICAL TODO: Change UI to be somewhat decent**
 
 **NON CRITICAL TODO: Change UI to Svelte/Vue. Need for a frontend-only server to just call backend APIs**

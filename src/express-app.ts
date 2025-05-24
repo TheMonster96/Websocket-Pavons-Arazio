@@ -1,6 +1,6 @@
 import Express, { response } from "express"
 import cors from "cors"
-import { shelly_devices } from "./utils.js"
+//import { shelly_devices } from "./utils.js"
 import { shellyDiscovery } from "./shellyDiscovery.js"
 
 const app = Express()
@@ -28,7 +28,7 @@ app.use(cors({
 
 
 app.get('/', (req, res) => {
-    res.render('index', { shelly_devices: shelly_devices })
+    res.render('index')
 })
 
 app.route('/shellyDiscovery')
@@ -36,7 +36,7 @@ app.route('/shellyDiscovery')
     .get(async (req, res) => {
         //console.log(result.text)
         const results = await shellyDiscovery(16)
-        console.log(results)
+        //console.log(results)
         res.render('shellyRegistration', { shelly_devices: results })
     })
 

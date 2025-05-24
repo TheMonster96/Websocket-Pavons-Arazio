@@ -1,7 +1,6 @@
 //const form_button=document.getElementById("form_button")
 
-const shelly_devices = document.querySelectorAll("img.shelly")
-console.log(shelly_devices)
+const shelly_devices = []
 
 const ws = new WebSocket("wss://192.168.1.2:3000")
 console.log(ws)
@@ -40,9 +39,60 @@ ws.addEventListener("message", message => {
     const msg = JSON.parse(message.data)
     console.log(msg)
 
-    if (msg.state !== undefined) {
-        changeImage(msg.state, msg.which_shelly)
+    if (msg.shelly_information) {
+        console.log("adding new shelly")
+        const shelly = document.createElement("img")
+
+        shelly.setAttribute('src', (msg.state ? "/public/B_On.svg" : "/public/B_Off.svg"))
+        shelly.setAttribute('state', msg.state)
+        if (msg.name !== undefined)
+            shelly.setAttribute('id', msg.name)
+        else if (msg.id !== undefined)
+            shelly.setAttribute('id', msg.id)
+        else
+            shelly.setAttribute('id', 'no name')
+
+
+
+        shelly.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            const msg = JSON.stringify({
+                dest: shelly.id,
+                method: "Toggle"
+            })
+            console.log(msg)
+
+            ws.send(msg)
+        })
+
+
+
+        shelly_devices.push(shelly)
+
+        document.body.appendChild(shelly)
+
     }
+
+    else if (msg.is_closed) {
+        shelly_devices.forEach(shelly_device => {
+            if (shelly_device.name === msg.name || shelly_device.id === msg.id) {
+                shelly_devices.pop(shelly_device)
+                document.body.removeChild(shelly_device)
+            }
+        })
+    }
+
+    else if (msg.state !== undefined) {
+        let which_shelly;
+        if (msg.which_shelly.name !== null)
+            which_shelly = msg.which_shelly.name
+        else if (msg.which_shelly.id !== undefined)
+            which_shelly = msg.which_shelly.id
+        changeImage(msg.state, which_shelly)
+    }
+
+
     //console.log(msg.was_on)
     //changeImage(msg.was_on)
     //changeImage(switch_state)

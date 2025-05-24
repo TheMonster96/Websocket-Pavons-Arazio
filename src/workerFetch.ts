@@ -1,3 +1,4 @@
+import { response } from "express"
 import { workerData, parentPort } from "node:worker_threads"
 
 
@@ -23,9 +24,18 @@ async function callShellyApi() {
 
             if (result.ok) {
                 let json = await result.json()
+                let message = {
+                    name: json.sys.device.name,
+                    id: json.wifi.ap.ssid,
+                    address: (baseIPAddress + address),
+                    ws: json.ws
+                }
 
-                json.address = baseIPAddress + address
-                parentPort?.postMessage(json)
+                parentPort?.postMessage(message)
+            }
+            else {
+                console.log("motti buttana")
+                throw new Error(`Error contacting shelly Shelly.GetConfig api ${result.status} \n ${result.statusText}`)
             }
         }
         catch (error: any) {
