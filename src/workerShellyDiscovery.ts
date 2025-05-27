@@ -27,7 +27,7 @@ async function callShellyApi() {
             if (result.ok) {
                 let json = await result.json()
 
-                if (json.ws.server !== process.env.HOST_WSS_ADDRESS) {
+                if (json.ws.server === process.env.HOST_WSS_ADDRESS) {
                     console.log("Can be sent ")
                     let message: ShellyAPI_Response = {
                         name: json.sys.device.name,

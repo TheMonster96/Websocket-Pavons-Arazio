@@ -13,6 +13,9 @@ app.set('views', './src/views')
 
 app.use('/public', Express.static('./src/client/'))
 
+app.use(Express.json())
+app.use(Express.urlencoded({ extended: true }))
+
 app.use(cors({
     origin: function (origin, callback) {
         if (!origin || allowedOrigins.includes(origin)) {
@@ -41,7 +44,9 @@ app.route('/shellyAdd')
     })
 
     .post(async (req, res) => {
-
+        const shelly_name = req.body.shelly_name
+        console.log(shelly_name)
+        res.status(200).json({ ok: true })
     })
 
 
