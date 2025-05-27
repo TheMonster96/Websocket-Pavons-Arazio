@@ -7,6 +7,7 @@ import { ShellyClosing, ShellyInformation } from "./types.js";
 
 
 
+
 const serverS = startHTTPS()
 //console.log(serverS.listeners('upgrade'))
 
@@ -146,7 +147,7 @@ wsS_clients.on('connection', function (socket, req) {
 })
 
 
-export const wsS_shelly = new WebSocketServer({ port: 8888 }, () => {
+export const wsS_shelly = new WebSocketServer({ port: process.env.SHELLY_WEBSOCKET_SERVER_PORT }, () => {
     console.log("WS shelly server started")
 })
 
@@ -215,7 +216,8 @@ wsS_shelly.on('connection', async function (socket: WebSocket, req: IncomingMess
     socket.on('message', (data) => {
         /*
         *
-        * Checks the internal switch state after the Shelly sends a Notify Status response (when a change in state occurs from withing the built-in web API)
+        * Checks the internal switch state after the Shelly sends a Notify Status response 
+        * (when a change in state occurs from withing the built-in web API or when the device first connects after boot)
         * and updates the Shelly socket state and broadcasts it to every connected client
         * 
         * 

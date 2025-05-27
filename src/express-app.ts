@@ -31,13 +31,13 @@ app.get('/', (req, res) => {
     res.render('index')
 })
 
-app.route('/shellyDiscovery')
+app.route('/shellyAdd')
 
     .get(async (req, res) => {
         //console.log(result.text)
         const results = await shellyDiscovery(16)
         //console.log(results)
-        res.render('shellyRegistration', { shelly_devices: results })
+        res.render('shellySetup', { shelly_devices: results })
     })
 
     .post(async (req, res) => {

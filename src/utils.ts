@@ -1,5 +1,12 @@
 //import { readDevices } from "./initializeDevices.js"
 import { WebSocket } from "ws"
+import { config, DotenvConfigOptions, DotenvConfigOutput } from "dotenv"
+import path from "node:path"
+import { ShellyAPI_Response } from "./types.js"
+
+let __dirname = path.dirname(new URL(import.meta.url).pathname)
+__dirname = __dirname.substring(1, __dirname.length)
+
 
 
 //export const shelly_devices = await readDevices()
@@ -32,5 +39,26 @@ export async function getShellyConfig(shellyAddress: string | undefined) {
     }
 
 
+
+}
+
+export function dotenvConf() {
+    config({ path: path.join(__dirname, "../.env") })
+}
+
+export function isShellyAPI_Response(response: ShellyAPI_Response): response is ShellyAPI_Response {
+    //console.log(typeof response, response)
+    console.log("Type of null : " + typeof null)
+    console.log("Response type : " + typeof response)
+    console.log("Response name type : " + typeof response.name)
+    console.log("Response id type : " + typeof response.id)
+    console.log("Response address type : " + typeof response.address)
+    console.log("Response ws type : " + typeof response.ws)
+    return typeof response === "object"
+        && response !== null
+        && (typeof response.name === "string" || (response.name === null && typeof response.name === "object"))
+        && (typeof response.id === "string" || (response.id === null && typeof response.id === "object"))
+        && typeof response.address === "string"
+        && response.ws !== null && typeof response.ws === "object"
 
 }

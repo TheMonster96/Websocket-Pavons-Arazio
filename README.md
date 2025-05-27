@@ -1,6 +1,7 @@
 
 
-**TODO: Implement logic to not return already registered shelly devices to users.**
+**TODO: Implement simple WebSocket communicaton to dynamically send configurable Shellys instead of rendering after the Discovery is completed**
+      **to make the navigation non blocking and almost seamless**
 
 **TODO: Implement registration POST API endpoint to ShellyWSS and unregistration. TODO: Implement an update name API to change shelly devices' names.**
       **Implement an API to call the specific's shelly Ws.SetConfig API to setup Outbound WebSockets connection to ShellyWSS.**

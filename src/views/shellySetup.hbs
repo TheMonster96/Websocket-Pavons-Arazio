@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shelly Registration</title>
+</head>
+
+<body>
+
+</body>
+<a href="/">
+    <button>Go to home</button>
+</a>
+<br><br>
+
+{{#if shelly_devices}}
+<form action="/shellyAdd" method="post">
+
+    <select name="shelly_device" multiple required>
+        <option disabled> Select a Shelly Device</option>
+        {{#each shelly_devices}}
+
+        <option value="{{device}}">{{id}} {{ws.server}}</option>
+        {{/each}}
+    </select>
+
+    <input type="text" name="shelly_name" placeholder="Shelly Name" />
+
+</form>
+{{else}}
+
+<p>No shellies to be configured</p>
+
+{{/if}}
+
+
+</html>

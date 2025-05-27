@@ -25,9 +25,12 @@
   },
   "dependencies": {
     "@types/cors": "^2.8.17",
+    "@types/dotenv": "^6.1.1",
     "@types/express": "^5.0.2",
+    "@types/node": "^22.15.21",
     "@types/ws": "^8.18.1",
     "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
     "fs": "^0.0.1-security",
     "fs-extra": "^11.3.0",
     "hbs": "^4.2.0",

@@ -1,5 +1,6 @@
 import { response } from "express"
 import { workerData, parentPort } from "node:worker_threads"
+import { ShellyAPI_Response } from "./types.js"
 
 
 async function callShellyApi() {
@@ -12,26 +13,30 @@ async function callShellyApi() {
 
     for (let address = startIPAddress; address < endIPAddress; address++) {
         try {
+            //console.log("Address " + address)
             const result: Response = await fetch(`http://${baseIPAddress}${address}/rpc/Shelly.GetConfig`, {
                 method: "Get",
                 headers: {
                     'Accept': "application/ json"
                 },
-                signal: AbortSignal.timeout(100)
+                signal: AbortSignal.timeout(220)
             })
 
 
 
             if (result.ok) {
                 let json = await result.json()
-                let message = {
-                    name: json.sys.device.name,
-                    id: json.wifi.ap.ssid,
-                    address: (baseIPAddress + address),
-                    ws: json.ws
-                }
 
-                parentPort?.postMessage(message)
+                if (json.ws.server !== process.env.HOST_WSS_ADDRESS) {
+                    console.log("Can be sent ")
+                    let message: ShellyAPI_Response = {
+                        name: json.sys.device.name,
+                        id: json.wifi.ap.ssid,
+                        address: (baseIPAddress + address),
+                        ws: json.ws
+                    }
+                    parentPort?.postMessage(message)
+                }
             }
             else {
                 console.log("motti buttana")
