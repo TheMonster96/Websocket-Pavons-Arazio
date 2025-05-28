@@ -2,7 +2,9 @@
 import { WebSocket } from "ws"
 import { config, DotenvConfigOptions, DotenvConfigOutput } from "dotenv"
 import path from "node:path"
-import { ShellyAPI_Response } from "./types.js"
+import { ShellyAPI_Response, ShellySetName } from "./types.js"
+import { abort } from "node:process"
+import { assert } from "node:console"
 
 let __dirname = path.dirname(new URL(import.meta.url).pathname)
 __dirname = __dirname.substring(1, __dirname.length)
@@ -11,7 +13,7 @@ __dirname = __dirname.substring(1, __dirname.length)
 
 //export const shelly_devices = await readDevices()
 
-export function getKeyByValue(/**@param {*} */ search_value: string, set: Set<WebSocket>) {
+export function getShellyAddressFromNameOrID(search_value: string, set: Set<WebSocket>) {
     for (const [key, value] of set.entries()) {
         const name = value.connected_device_information.which_shelly?.name
         const id = value.connected_device_information.which_shelly?.id
@@ -21,6 +23,18 @@ export function getKeyByValue(/**@param {*} */ search_value: string, set: Set<We
 
     return false
 }
+
+export function updateShellyDeviceInfo(new_name: string, search_address: string, set: Set<WebSocket>) {
+    for (const [key, value] of set.entries()) {
+        const shelly_address = value.connected_device_information.remote_address
+        if (Object.is(shelly_address, search_address)) {
+            assert(typeof key.connected_device_information.which_shelly !== undefined)
+            key.connected_device_information.which_shelly!.name = new_name
+        }
+
+    }
+}
+
 
 export async function getShellyConfig(shellyAddress: string | undefined) {
     try {
@@ -48,12 +62,12 @@ export function dotenvConf() {
 
 export function isShellyAPI_Response(response: ShellyAPI_Response): response is ShellyAPI_Response {
     //console.log(typeof response, response)
-    console.log("Type of null : " + typeof null)
-    console.log("Response type : " + typeof response)
-    console.log("Response name type : " + typeof response.name)
-    console.log("Response id type : " + typeof response.id)
-    console.log("Response address type : " + typeof response.address)
-    console.log("Response ws type : " + typeof response.ws)
+    // console.log("Type of null : " + typeof null)
+    // console.log("Response type : " + typeof response)
+    // console.log("Response name type : " + typeof response.name)
+    // console.log("Response id type : " + typeof response.id)
+    // console.log("Response address type : " + typeof response.address)
+    // console.log("Response ws type : " + typeof response.ws)
     return typeof response === "object"
         && response !== null
         && (typeof response.name === "string" || (response.name === null && typeof response.name === "object"))
@@ -61,4 +75,28 @@ export function isShellyAPI_Response(response: ShellyAPI_Response): response is 
         && typeof response.address === "string"
         && response.ws !== null && typeof response.ws === "object"
 
+}
+
+export async function setShellyName(shelly_info: ShellySetName): Promise<boolean> {
+    console.log("Address received :" + shelly_info.address + "\n" + "Name received :" + shelly_info.name)
+    try {
+        const response = await fetch(`http://${shelly_info.address}/rpc/Sys.SetConfig?config={"device" : {"name" : "${shelly_info.name}"}}`, {
+            method: "Get",
+            signal: AbortSignal.timeout(3000)
+        }
+        )
+
+        if (response.ok) {
+            console.log(`Name for Shelly ${shelly_info.address} updated to ${shelly_info.name}`)
+            return true
+        }
+        else {
+            throw new Error(`HTTP Error contacting the Shelly device's API to get the name/id ${response.status} \n ${response.statusText} `)
+        }
+
+    } catch (err) {
+        //console.log("motti buttana")
+        console.error(err)
+    }
+    return false
 }

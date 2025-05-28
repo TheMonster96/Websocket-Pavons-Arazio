@@ -22,7 +22,11 @@
         <option disabled> Select a Shelly Device</option>
         {{#each shelly_devices}}
 
-        <option value="{{device}}">{{id}} {{ws.server}}</option>
+        <option value="{{address}}">
+
+            {{id}}
+
+            {{ws.server}}</option>
         {{/each}}
     </select>
     <br>

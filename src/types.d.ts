@@ -50,6 +50,10 @@ interface ShellyAPI_Response {
     ws: object
 }
 
+interface ShellySetName {
+    name: string,
+    address: string
+}
 interface Certificates {
     key: Buffer,
     cert: Buffer

@@ -2,6 +2,10 @@
 
 **TODO: Implement simple WebSocket communicaton to dynamically send configurable Shellys instead of rendering after the Discovery is completed**
       **to make the navigation non blocking and almost seamless**
+      **The idea is to implement a temporary WebSocket Server (or permanent, just for the sace of performance) which the worker threads**
+      **can interface to and dynamically send to clients every new successful Shelly API Responses, and maybe also implement some**
+      **sort of chaching to save computational power an dstill make the navigation seamless**
+
 
 **TODO: Implement registration POST API endpoint to ShellyWSS and unregistration. TODO: Implement an update name API to change shelly devices' names.**
       **Implement an API to call the specific's shelly Ws.SetConfig API to setup Outbound WebSockets connection to ShellyWSS.**

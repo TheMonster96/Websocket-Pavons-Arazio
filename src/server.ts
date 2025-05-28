@@ -1,7 +1,7 @@
 import { startHTTPS, createUpgradeHandler } from "./httpsServer.js";
 import { WebSocketServer, WebSocket } from "ws";
 import { IncomingMessage } from "http";
-import { getKeyByValue, getShellyConfig } from "./utils.js";
+import { getShellyAddressFromNameOrID, getShellyConfig } from "./utils.js";
 import { ShellyClosing, ShellyInformation } from "./types.js";
 
 
@@ -125,7 +125,7 @@ wsS_clients.on('connection', function (socket, req) {
 
         if (message.dest !== undefined && message.method !== undefined) {
             console.log(message)
-            let shelly_address = getKeyByValue(message.dest, wsS_shelly.clients)
+            let shelly_address = getShellyAddressFromNameOrID(message.dest, wsS_shelly.clients)
             console.log(shelly_address)
             if (shelly_address) {
                 wsS_shelly.clients.forEach((shelly: WebSocket) => {
