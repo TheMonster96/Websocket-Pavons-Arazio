@@ -1,11 +1,13 @@
 import Express, { response } from "express"
 import cors from "cors"
 //import { shelly_devices } from "./utils.js"
-import { shellyDiscovery } from "./shellyDiscovery.js"
-import { setShellyName, updateShellyDeviceInfo } from "./utils.js"
-import { ShellySetName } from "./types.js"
+import { returnFoundShellys, shellyDiscovery } from "./shellyDiscovery.js"
+import { setShellyName, SetShellyWSS, updateShellyDeviceInfo } from "./utils.js"
+import { ShellyFailedAPI_Response, ShellySetName, ShellySetWS } from "./types.js"
 import { wsS_shelly } from "./server.js"
+import { dotenvConf } from "./utils.js"
 
+dotenvConf()
 const app = Express()
 export default app
 
@@ -38,13 +40,57 @@ app.get('/', (req, res) => {
     res.render('index')
 })
 
-app.route('/shellyAdd')
+app.route('/api/v1/shellyAdd')
 
     .get(async (req, res) => {
         //console.log(result.text)
-        const results = await shellyDiscovery(16)
+        const results = returnFoundShellys()
+        console.log(results)
+
         //console.log(results)
         res.render('shellySetup', { shelly_devices: results })
+    })
+
+    .post(async (req, res) => {
+        /**
+         * 
+         *  
+         * This API Route simply saves the Shelly Device specified in the form and then calls a function 
+         * giving it the Shelly Device as argument and then updates the WS Config in the device. If the call
+         * is successfull, then the function will return true, else it will return false + error 
+         * 
+         */
+
+        const shelly_set_ws: ShellySetWS = {
+            name: req.body.shelly_name,
+            address: req.body.shelly_device
+        }
+
+        console.log(req.body.shelly_name, req.body.shelly_device)
+        const success: ShellyFailedAPI_Response = await SetShellyWSS(shelly_set_ws)
+
+        if (success.success) {
+            //updateShellyDeviceInfo(shelly_set_ws.name, shelly_set_ws.address, wsS_shelly.clients)
+            res.status(200).json({ ok: true, message: `Shelly WS Server set to ${process.env.HOST_SHELLY_WSS_ADDRESS}` })
+
+
+        }
+        else {
+            throw new Error("Internal server error " + success.error)
+        }
+
+
+    })
+
+
+
+app.route('/api/v1/shellyUpdateName')
+
+    .get(async (req, res) => {
+        //console.log(result.text)
+        const results = returnFoundShellys()
+        //console.log(results)
+        res.render('shellyUpdateName', { shelly_devices: results })
     })
 
     .post(async (req, res) => {
@@ -66,18 +112,17 @@ app.route('/shellyAdd')
         }
 
         console.log(req.body.shelly_name, req.body.shelly_device)
-        const success = await setShellyName(shelly_set_name)
+        const success: ShellyFailedAPI_Response = await setShellyName(shelly_set_name)
 
-        if (success) {
+        if (success.success) {
             updateShellyDeviceInfo(shelly_set_name.name, shelly_set_name.address, wsS_shelly.clients)
             res.status(200).json({ ok: true, message: `Shelly name correctly set to ${shelly_set_name.name}` })
         }
         else {
-            throw new Error("Internal server error")
+            throw new Error("Internal server error " + success.error)
         }
 
 
     })
-
 
 

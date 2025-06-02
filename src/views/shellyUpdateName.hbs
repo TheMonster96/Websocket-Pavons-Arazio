@@ -16,21 +16,22 @@
 <br><br>
 
 {{#if shelly_devices}}
-<form action="/api/v1/shellyAdd" method="post">
+<form action="/api/v1/shellyUpdateName" method="post">
 
     <select name="shelly_device" required>
         <option disabled> Select a Shelly Device</option>
         {{#each shelly_devices}}
 
-        <option value="{{this.address}}">
-
-            {{this.id}}
-
-            {{this.ws.server}}</option>
+        <option value="{{address}}">
+            {{id}}
+            {{ws.server}}
+        </option>
         {{/each}}
     </select>
     <br>
-    <input type="submit" value="Register Shelly" />
+
+    <input type="text" name="shelly_name" placeholder="Shelly Name" />
+    <input type="submit" value="Add name" />
 </form>
 {{else}}
 

@@ -3,16 +3,22 @@ import { WebSocketServer, WebSocket } from "ws";
 import { IncomingMessage } from "http";
 import { getShellyAddressFromNameOrID, getShellyConfig } from "./utils.js";
 import { ShellyClosing, ShellyInformation } from "./types.js";
+import { startDiscoveryInterval } from "./shellyDiscovery.js";
 
 
 
 
+startDiscoveryInterval(16)
 
 const serverS = startHTTPS()
 //console.log(serverS.listeners('upgrade'))
 
+/*export const wsS_clients_shellyDisovery = new WebSocketServer({ server: serverS, path: "/shellyAdd" }, () => {
+    console.log("WS shelly add started")
+})*/
+
 export const wsS_clients = new WebSocketServer({ server: serverS }, () => {
-    console.log(wsS_clients)
+    console.log("WS client started")
 })
 
 //console.log(wsS_clients)

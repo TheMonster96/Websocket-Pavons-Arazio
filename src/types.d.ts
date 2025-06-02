@@ -24,7 +24,7 @@ declare global {
             TLS_CA_PATH?: string,
             NODE_ENV: 'development' | 'production' | 'test',
             SHELLY_WEBSOCKET_SERVER_PORT: number,
-            HOST_WSS_ADDRESS: string
+            HOST_SHELLY_WSS_ADDRESS: string
 
         }
     }
@@ -50,12 +50,27 @@ interface ShellyAPI_Response {
     ws: object
 }
 
+interface ShellyFailedAPI_Response {
+    success: boolean,
+    error: Error | any
+}
 interface ShellySetName {
     name: string,
     address: string
 }
+
+interface ShellySetWS {
+    name: string,
+    address: string
+}
+
 interface Certificates {
     key: Buffer,
     cert: Buffer
 }
 
+interface ShellyDiscovery {
+    shellies?: ShellyAPI_Response[],
+    initialization_time?: number,
+    last_update?: number
+}

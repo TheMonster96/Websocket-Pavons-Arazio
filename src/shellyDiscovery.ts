@@ -1,8 +1,14 @@
 import { assert } from "node:console"
 import path from "node:path"
 import { Worker } from "node:worker_threads"
-import { ShellyAPI_Response } from "./types.js"
+import { ShellyAPI_Response, ShellyDiscovery } from "./types.js"
 import { isShellyAPI_Response } from "./utils.js"
+import { isNullishCoalesce } from "typescript"
+
+let shellyDiscoveryInterval: NodeJS.Timeout
+
+let foundShellys: ShellyDiscovery = { shellies: [], initialization_time: 0, last_update: 0 }
+let firstExecution: boolean = true
 
 let baseIpAddress = "192.168.1."
 const addressRange = 256
@@ -54,8 +60,8 @@ function splitAddressIntervals(splitFactor: number): number[] {
  * 
  */
 
-export function shellyDiscovery(splitFactor: number): Promise<ShellyAPI_Response[]> {
-    return new Promise((resolve, reject) => {
+export async function shellyDiscovery(splitFactor: number) {
+    foundShellys.shellies = await new Promise((resolve, reject) => {
         let results: ShellyAPI_Response[] = []
         let thread_counter = 0
 
@@ -108,6 +114,37 @@ export function shellyDiscovery(splitFactor: number): Promise<ShellyAPI_Response
         })
 
     });
+    /*if (foundShellys.initialization_time === 0) {
+        foundShellys.initialization_time = Date.now()
+    }
+
+    foundShellys.last_update = Date.now()*/
 }
 
+export async function startDiscoveryInterval(splitFactor: number) {
+    if (firstExecution) {
+        await shellyDiscovery(splitFactor)
+    }
 
+    shellyDiscoveryInterval = setInterval(async () => {
+        await shellyDiscovery(splitFactor)
+    }, 30000)
+}
+
+export function stopDiscoveryInterval() {
+    clearInterval(shellyDiscoveryInterval)
+}
+
+export function returnFoundShellys(): ShellyAPI_Response[] | undefined | [] {
+    //console.log(foundShellys.shellies?.length)
+    if (foundShellys.shellies?.length !== 0) {
+        return foundShellys.shellies
+    }
+    return undefined
+}
+
+export function removeShelly() {
+    if (foundShellys.shellies?.length !== 0) {
+
+    }
+}

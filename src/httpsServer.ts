@@ -1,9 +1,8 @@
-import { readFileSync, writeFile } from "fs";
+import { readFileSync } from "fs";
 import { createServer as HTTPSServer, Server } from "https"
 import app from "./express-app.js";
 //import Certificates from "./certInterface.js";
 import { wsS_clients } from "./server.js";
-import { WebSocketServer } from "ws";
 import { Certificates } from "./types.js";
 import { dotenvConf } from "./utils.js";
 
@@ -30,6 +29,9 @@ export function startHTTPS(): Server {
     return serverS
 }
 
+/**
+ * Unused
+ */
 export function createUpgradeHandler() {
 
     serverS.on('upgrade', function (request, socket, head) {

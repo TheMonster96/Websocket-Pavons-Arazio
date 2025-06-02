@@ -2,7 +2,7 @@
 import { WebSocket } from "ws"
 import { config, DotenvConfigOptions, DotenvConfigOutput } from "dotenv"
 import path from "node:path"
-import { ShellyAPI_Response, ShellySetName } from "./types.js"
+import { ShellyAPI_Response, ShellyFailedAPI_Response, ShellySetName, ShellySetWS } from "./types.js"
 import { abort } from "node:process"
 import { assert } from "node:console"
 
@@ -77,7 +77,7 @@ export function isShellyAPI_Response(response: ShellyAPI_Response): response is 
 
 }
 
-export async function setShellyName(shelly_info: ShellySetName): Promise<boolean> {
+export async function setShellyName(shelly_info: ShellySetName): Promise<ShellyFailedAPI_Response> {
     console.log("Address received :" + shelly_info.address + "\n" + "Name received :" + shelly_info.name)
     try {
         const response = await fetch(`http://${shelly_info.address}/rpc/Sys.SetConfig?config={"device" : {"name" : "${shelly_info.name}"}}`, {
@@ -88,15 +88,40 @@ export async function setShellyName(shelly_info: ShellySetName): Promise<boolean
 
         if (response.ok) {
             console.log(`Name for Shelly ${shelly_info.address} updated to ${shelly_info.name}`)
-            return true
+            return { success: true, error: undefined }
         }
         else {
-            throw new Error(`HTTP Error contacting the Shelly device's API to get the name/id ${response.status} \n ${response.statusText} `)
+            return { success: false, error: new Error(`HTTP Error contacting the Shelly device's API to get the name/id ${response.status} \n ${response.statusText} `) }
         }
 
     } catch (err) {
         //console.log("motti buttana")
         console.error(err)
+        return { success: false, error: err }
     }
-    return false
+
+}
+
+export async function SetShellyWSS(shelly_info: ShellySetWS): Promise<ShellyFailedAPI_Response> {
+    console.log("Address received :" + shelly_info.address + "\n" + "Name received :" + shelly_info.name)
+    try {
+        const response = await fetch(`http://${shelly_info.address}/rpc/WS.SetConfig?config={"server" : "${process.env.HOST_SHELLY_WSS_ADDRESS}" }`, {
+            method: "Get",
+            signal: AbortSignal.timeout(3000)
+        }
+        )
+
+        if (response.ok) {
+            console.log(`${shelly_info.name} : ${shelly_info.address} WS config successfully updated to ${process.env.HOST_SHELLY_WSS_ADDRESS}`)
+            return { success: true, error: undefined }
+        }
+        else {
+            return { success: false, error: new Error(`HTTP Error contacting the Shelly device's API to get the name/id ${response.status} \n ${response.statusText} `) }
+        }
+
+    } catch (err) {
+        //console.log("motti buttana")
+        console.error(err)
+        return { success: false, error: err }
+    }
 }
