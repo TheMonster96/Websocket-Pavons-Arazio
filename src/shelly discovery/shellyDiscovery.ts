@@ -1,11 +1,13 @@
 import { assert } from "node:console"
 import path from "node:path"
 import { Worker } from "node:worker_threads"
-import { ShellyAPI_Response, ShellyDiscovery } from "./types.js"
-import { isShellyAPI_Response } from "./utils.js"
-import { isNullishCoalesce } from "typescript"
+import { ShellyAPI_Response, ShellyDiscovery } from "../utils/types.js"
+import { isShellyAPI_Response } from "../utils/utils.js"
+import { wsS_clients_shellyDisovery } from "../server.js"
+
 
 let shellyDiscoveryInterval: NodeJS.Timeout
+const defaultSplitFactor: number = 16
 
 let foundShellys: ShellyDiscovery = { shellies: [], initialization_time: 0, last_update: 0 }
 let firstExecution: boolean = true
@@ -13,8 +15,20 @@ let firstExecution: boolean = true
 let baseIpAddress = "192.168.1."
 const addressRange = 256
 
-let __dirname = path.dirname(new URL(import.meta.url).pathname)
-__dirname = __dirname.substring(1, __dirname.length)
+let isRefreshing: boolean = false
+
+export function checkIfNotAlreadyExists(shelly_name: string | undefined, shelly_id: string | undefined) {
+    if (foundShellys.shellies?.length === 0) {
+        return false
+    }
+
+    foundShellys.shellies?.forEach((shelly) => {
+        if (shelly.name === shelly_name || shelly.id === shelly_id)
+            return true
+    })
+
+    return false
+}
 
 /**
  * 
@@ -60,14 +74,14 @@ function splitAddressIntervals(splitFactor: number): number[] {
  * 
  */
 
-export async function shellyDiscovery(splitFactor: number) {
+export async function shellyDiscovery(splitFactor: number = defaultSplitFactor) {
     foundShellys.shellies = await new Promise((resolve, reject) => {
         let results: ShellyAPI_Response[] = []
         let thread_counter = 0
 
         splitAddressIntervals(splitFactor).forEach((address, index, array) => {
             if (index !== array.length - 1) {
-                const worker = new Worker(path.join(__dirname, "./workerShellyDiscovery.js"), {
+                const worker = new Worker(path.join(import.meta.dirname, "./workerShellyDiscovery.js"), {
                     workerData: {
                         baseIPAddress: baseIpAddress,
                         startIPAddress: index === 0 ? address + 1 : address,
@@ -89,6 +103,7 @@ export async function shellyDiscovery(splitFactor: number) {
                     if (thread_counter === splitFactor) {
                         console.log("Resolving the array")
                         resolve(results)
+
                     }
 
 
@@ -135,7 +150,17 @@ export function stopDiscoveryInterval() {
     clearInterval(shellyDiscoveryInterval)
 }
 
-export function returnFoundShellys(): ShellyAPI_Response[] | undefined | [] {
+export async function refreshDiscoveryInterval() {
+    if (!isRefreshing) {
+        isRefreshing = true
+        shellyDiscoveryInterval.refresh()
+        await shellyDiscovery()
+        isRefreshing = false
+        wsS_clients_shellyDisovery.emit('Refresh', (foundShellys.shellies))
+    }
+}
+
+export function getFoundShellys(): ShellyAPI_Response[] | undefined | [] {
     //console.log(foundShellys.shellies?.length)
     if (foundShellys.shellies?.length !== 0) {
         return foundShellys.shellies

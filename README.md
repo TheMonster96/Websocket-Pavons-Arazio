@@ -1,12 +1,8 @@
 
-**DONE: Implement registration POST API endpoint to ShellyWSS and unregistration. TODO: Implement an update name API to change shelly devices' names.**
-      **Implement an API to call the specific's shelly Ws.SetConfig API to setup Outbound WebSockets connection to ShellyWSS.**
-      **Implement an API to call the specific's shelly Sys.SetConfig with {name: ... } to change device name**
-
 **TODO: Implement wss:// on ShellyWSS**
 
-
-**DONE: Implemented Shelly Discovery Interval but need to add WebSockets**
+#DA FARE OGGI
+**TODO: IMPLEMENT CORRECT WEBSOCKET SERVERS TO HAVE THE NOSERVER PROPERTY AND ADD VARIOUS HANDLE UPGRADES IN THE HTTPS SERVER**
 
 **TODO: Reimplement the Shelly Disovery logic to, instead of scanning on every new request, create an interval (around 20s or 30s) to scan the network periodically**
       **and then, through a WebSocket server to which the clients connect upon requesting to endpoints /api/v1/shellyAdd or /api/v1/shellyUpdate, broadcast**
@@ -14,13 +10,30 @@
       **api_responses: JSON[]**
       **(not sure) devices (to reduce overhead if devices are the same, uses network id ): string[]**
       **last_time_created (or updated): string**
+
+#DA FARE OGGI
 **CHECK ShellyDiscovery WS reimplementation.png FOR SCHEME**
 
+#DA FARE OGGI
+**TODO: Implement authentication with sessions. After that, if there's enough time left, switch to JWT**
+**TODO: Add NoSQL database if there's enough time left, otherwise add classic SQL Database**
+
+#DA FARE DOPO I DATABASE E LA REIMPLEMENTAZIONE SHELLYDISCOVERY
 **TODO: Add Docker to have scalable and ephemeral processes.**
+
+#DA FARE DOPO DOCKER E REIMPLEMENTAZIONE SHELLYDISCOVERY
+**TODO: Change UI to be somewhat decent**
+**TODO: Write a presentation for this project**
+
+#DA FARE COME FINE SE RIMANE TEMPO
+**TODO: Change UI to Svelte/Vue. Need for a frontend-only server to just call backend APIs**
+**TODO: Make everything a separate service in docker to have more security, stability**
+**TODO: Transfer everything to the Zimablade Server**
+
+
+
+
+
+#NON NECESSARI
 **TODO: Add Nginx as Reverse Proxy for added security.**
 **TODO: Add Kubernetes to orchestrate Containers (not necessary but cool)**
-**TODO: Transfer everything to the Zimablade Server as final step**
-
-**NON NECESSARY TODO: Change UI to be somewhat decent**
-
-**NON NECESSARY TODO: Change UI to Svelte/Vue. Need for a frontend-only server to just call backend APIs**

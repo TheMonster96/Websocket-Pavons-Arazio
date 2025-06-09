@@ -2,7 +2,7 @@
 
 const shelly_devices = []
 
-const ws = new WebSocket("wss://192.168.1.2:3000")
+const ws = new WebSocket("wss://192.168.1.2:3000/home")
 console.log(ws)
 
 
