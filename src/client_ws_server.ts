@@ -1,19 +1,29 @@
-import { WebSocket } from "ws";
-import { wsS_clients, wsS_shelly } from "./server.js";
-import { ShellyInformation } from "./utils/types.js";
+import { WebSocket, WebSocketServer } from "ws";
+
+import { type ShellyInformation } from "./utils/types.js";
 import { getShellyAddressFromNameOrID } from "./utils/utils.js";
-import { Request } from "express";
+import { wsS_shelly } from "./shelly_ws_server.js";
+import { IncomingMessage } from "http";
 
-export function addClientWSSListeners() {
+export let wsS_clients: WebSocketServer
 
-    wsS_clients.on("error", error => {
+
+export function createAndAddClientWSSListeners() {
+
+    wsS_clients = new WebSocketServer({ noServer: true }, () => {
+        wsS_clients.on('listening', () => {
+            console.log("Client WSS has been started")
+        })
+    })
+
+    wsS_clients.on("error", (error: { name: string; message: any; stack: any; cause: any; }) => {
         console.log("WS Server? error : " + error.name)
         console.log(error.message)
         console.log(error.stack)
         console.log(error.cause)
     })
 
-    wsS_clients.on("wsClientError", error => {
+    wsS_clients.on("wsClientError", (error: { name: string; message: any; stack: any; cause: any; }) => {
         console.log("WS Client error : " + error.name)
         console.log(error.message)
         console.log(error.stack)
@@ -25,7 +35,7 @@ export function addClientWSSListeners() {
         console.log("WebSocket Client Server connection closed")
     })
 
-    wsS_clients.on('connection', function (socket, req) {
+    wsS_clients.on('connection', (socket: WebSocket, req: IncomingMessage) => {
         console.log("WebSocket connesso")
 
         //console.log(socket)

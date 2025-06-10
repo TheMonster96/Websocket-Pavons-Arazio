@@ -1,7 +1,7 @@
-import mysql, { Connection, ConnectionOptions, createConnection, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
+import mysql, { type Connection, type ConnectionOptions, createConnection, type ResultSetHeader, type RowDataPacket } from 'mysql2/promise';
 
 import { dotenvConf } from '../utils/utils.js';
-import { DB_Result, User, User_Retrieved } from '../utils/types.js';
+import type { DB_Result, User, User_Retrieved } from '../utils/types.js';
 
 dotenvConf(import.meta.dirname, 2)
 

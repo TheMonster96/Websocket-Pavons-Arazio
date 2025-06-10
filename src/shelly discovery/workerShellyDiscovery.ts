@@ -1,6 +1,6 @@
 import { response } from "express"
 import { workerData, parentPort } from "node:worker_threads"
-import { ShellyAPI_Response } from "../utils/types.js"
+import type { ShellyAPI_Response } from "../utils/types.js"
 import { checkIfNotAlreadyExists } from "./shellyDiscovery.js"
 
 

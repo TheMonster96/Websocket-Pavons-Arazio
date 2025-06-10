@@ -1,7 +1,6 @@
 {
   "name": "websocket-pavons-arazio",
   "version": "1.0.0",
-  "main": "index.js",
   "type": "module",
   "scripts": {
     "start": "nodemon ./dist/server",
@@ -20,6 +19,8 @@
   "homepage": "https://github.com/TheMonster96/Websocket-Pavons-Arazio#readme",
   "description": "",
   "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0",
     "@types/cookie-parser": "^1.4.8",
     "@types/express-session": "^1.18.1",
     "express": "^5.1.0",

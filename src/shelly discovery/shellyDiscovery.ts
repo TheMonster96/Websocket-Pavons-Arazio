@@ -1,9 +1,10 @@
 import { assert } from "node:console"
 import path from "node:path"
 import { Worker } from "node:worker_threads"
-import { ShellyAPI_Response, ShellyDiscovery } from "../utils/types.js"
-import { isShellyAPI_Response } from "../utils/utils.js"
-import { wsS_clients_shellyDisovery } from "../server.js"
+import type { ShellyAPI_Response, ShellyDiscovery } from "../utils/types.js"
+import { emitWSSDiscoveryEvent, isShellyAPI_Response } from "../utils/utils.js"
+import { wsS_clients_shellyDisovery } from "../discovery_ws_server.js"
+//import { wsS_clients_shellyDisovery } from "../server.js"
 
 
 let shellyDiscoveryInterval: NodeJS.Timeout
@@ -74,7 +75,7 @@ function splitAddressIntervals(splitFactor: number): number[] {
  * 
  */
 
-export async function shellyDiscovery(splitFactor: number = defaultSplitFactor) {
+export async function shellyDiscovery(splitFactor: number = defaultSplitFactor, refresh?: boolean) {
     foundShellys.shellies = await new Promise((resolve, reject) => {
         let results: ShellyAPI_Response[] = []
         let thread_counter = 0
@@ -104,6 +105,7 @@ export async function shellyDiscovery(splitFactor: number = defaultSplitFactor) 
                         console.log("Resolving the array")
                         resolve(results)
 
+
                     }
 
 
@@ -129,6 +131,10 @@ export async function shellyDiscovery(splitFactor: number = defaultSplitFactor) 
         })
 
     });
+
+    if (!refresh) {
+        wsS_clients_shellyDisovery.emit('DiscoveryUpdate', foundShellys.shellies)
+    }
     /*if (foundShellys.initialization_time === 0) {
         foundShellys.initialization_time = Date.now()
     }
@@ -156,7 +162,7 @@ export async function refreshDiscoveryInterval() {
         shellyDiscoveryInterval.refresh()
         await shellyDiscovery()
         isRefreshing = false
-        wsS_clients_shellyDisovery.emit('Refresh', (foundShellys.shellies))
+        emitWSSDiscoveryEvent('Refresh', foundShellys)
     }
 }
 

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="/public/js/shellyAddClient.js"></script>
+    <script defer src="/public/js/shellyAddClient.js"></script>
     <title>Shelly Registration</title>
 </head>
 
@@ -15,7 +15,7 @@
     <button>Go to home</button>
 </a>
 <br><br>
-
+<button id="ws_test_button">ws test button</button>
 {{#if shelly_devices}}
 <form action="/api/v1/shellyAdd" method="post">
 

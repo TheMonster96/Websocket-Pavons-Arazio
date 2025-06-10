@@ -1,29 +1,38 @@
-import { WebSocket } from "ws";
-import { wsS_clients_shellyDisovery } from "./server.js";
-import { Socket } from "dgram";
+import { WebSocket, WebSocketServer } from "ws";
+//import { wsS_clients_shellyDisovery } from "./server.js";
 import { IncomingMessage } from "http";
+import { ShellyAPI_Response, ShellySetWS } from "./utils/types.js";
 
-export function addShellyDisoveryWSSListeners() {
+export let wsS_clients_shellyDisovery: WebSocketServer
+
+
+export function createAndAddShellyDisoveryWSSListeners() {
+
+    wsS_clients_shellyDisovery = new WebSocketServer({ noServer: true }, () => {
+        wsS_clients_shellyDisovery.on('listening', () => {
+            console.log("Shelly Disovery WSS has been started")
+        })
+    })
 
     wsS_clients_shellyDisovery.on('close', () => {
         console.log(`Discovery WSS closed `)
     })
 
-    wsS_clients_shellyDisovery.on("error", error => {
+    wsS_clients_shellyDisovery.on("error", (error: { name: string; message: any; stack: any; cause: any; }) => {
         console.log("Discovery WS Server? error : " + error.name)
         console.log(error.message)
         console.log(error.stack)
         console.log(error.cause)
     })
 
-    wsS_clients_shellyDisovery.on("wsClientError", error => {
+    wsS_clients_shellyDisovery.on("wsClientError", (error: { name: string; message: any; stack: any; cause: any; }) => {
         console.log("WS Client error : " + error.name)
         console.log(error.message)
         console.log(error.stack)
         console.log(error.cause)
     })
 
-    wsS_clients_shellyDisovery.on('ShellyNameUpdate', (nameChangeShelly) => {
+    wsS_clients_shellyDisovery.on('ShellyNameUpdate', (nameChangeShelly: string) => {
         const shelly = JSON.parse(nameChangeShelly)
 
         console.log("Shelly name change event fired, new name: " + (shelly))
@@ -39,14 +48,20 @@ export function addShellyDisoveryWSSListeners() {
         })
     })
 
-    wsS_clients_shellyDisovery.on('Refresh', (discoveryData) => {
+    wsS_clients_shellyDisovery.on('Refresh', (discoveryData: ShellyAPI_Response[]) => {
 
-        const newShellys = JSON.parse(discoveryData)
+        let newShellys: ShellyAPI_Response[] = []
+        discoveryData.forEach((shelly) => {
+            console.log("New Shelly : " + shelly.id)
+            newShellys.push(JSON.parse(JSON.stringify(shelly)))
+        })
+
 
         console.log("Refresh emitted, new shellies :  \n " + (newShellys))
 
 
         wsS_clients_shellyDisovery.clients.forEach((client: WebSocket) => {
+            console.log("Sending to client")
             client.send(JSON.stringify(
                 {
                     eventType: "Refresh",
@@ -56,8 +71,30 @@ export function addShellyDisoveryWSSListeners() {
         })
     })
 
-    wsS_clients_shellyDisovery.on('RegisteredShelly', (registerData) => {
-        const registeredShelly = JSON.parse(registerData)
+    wsS_clients_shellyDisovery.on('DiscoveryUpdate', (discoveryData: ShellyAPI_Response[]) => {
+
+        console.log("Discovery completed, new scan :  \n ", (discoveryData))
+        console.log("WSS Discovery connected clients count : ", wsS_clients_shellyDisovery.clients.size)
+        wsS_clients_shellyDisovery.clients.forEach((client: WebSocket) => {
+            console.log("Sending to client")
+            client.send(JSON.stringify(
+                {
+                    eventType: "Refresh",
+                    newShellys: discoveryData
+                }
+            ))
+        })
+    })
+    /*let newShellys: ShellyAPI_Response[] = []
+    
+            discoveryData.forEach((shelly) => {
+                console.log("New Shelly : " + shelly.id)
+                newShellys.push((shelly))
+            })*/
+
+
+    wsS_clients_shellyDisovery.on('RegisteredShelly', (registeredShelly: ShellySetWS) => {
+        //const registeredShelly = JSON.parse(registerData)
 
         console.log("New Shelly registered (fired event) : " + (registeredShelly))
 
@@ -71,7 +108,12 @@ export function addShellyDisoveryWSSListeners() {
         })
     })
 
+
+
     wsS_clients_shellyDisovery.on('connection', (socket: WebSocket, req: IncomingMessage) => {
+
+        console.log("New WS connection on discovery WSS")
+
         let remote_address = req.socket?.remoteAddress?.substring(7)
 
         //Checks if the remote address is not ::1, which means localhost (127.0.0.1)
@@ -93,7 +135,8 @@ export function addShellyDisoveryWSSListeners() {
 
 
         socket.on('data', (data) => {
-            const message = JSON.parse(data.toString('utf-8'))
+            const message = data.toString('utf-8')
+            console.log(message)
 
         })
 

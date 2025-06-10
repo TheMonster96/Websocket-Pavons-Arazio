@@ -1,8 +1,8 @@
-import { Request, Response, Router } from "express";
-import { wsS_clients_shellyDisovery, wsS_shelly } from "../server.js";
+import { type Request, type Response, Router } from "express";
+import { wsS_shelly } from "../shelly_ws_server.js";
 import { getFoundShellys, refreshDiscoveryInterval } from "../shelly discovery/shellyDiscovery.js";
-import { ShellySetWS, ShellyFailedAPI_Response, ShellySetName } from "../utils/types.js";
-import { SetShellyWSS, setShellyName, updateShellyDeviceInfo, isValidRefererURL } from "../utils/utils.js";
+import type { ShellySetWS, ShellyFailedAPI_Response, ShellySetName } from "../utils/types.js";
+import { SetShellyWSS, setShellyName, updateShellyDeviceInfo, isValidRefererURL, emitWSSDiscoveryEvent } from "../utils/utils.js";
 
 export const router = Router()
 
@@ -38,7 +38,8 @@ router.route('/v1/shellyAdd')
         if (success.success) {
             //updateShellyDeviceInfo(shelly_set_ws.name, shelly_set_ws.address, wsS_shelly.clients)
             res.status(200).json({ ok: true, message: `Shelly WS Server set to ${process.env.HOST_SHELLY_WSS_ADDRESS}` })
-            wsS_clients_shellyDisovery.emit('RegisteredShelly', (shelly_set_ws))
+            emitWSSDiscoveryEvent('RegisteredShelly', shelly_set_ws)
+
 
         }
         else {
@@ -81,9 +82,9 @@ router.route('/v1/shellyUpdateName')
         const success: ShellyFailedAPI_Response = await setShellyName(shelly_set_name)
 
         if (success.success) {
-            updateShellyDeviceInfo(shelly_set_name.name, shelly_set_name.address, wsS_shelly.clients)
+            updateShellyDeviceInfo(shelly_set_name.name, shelly_set_name.address)
             res.status(200).json({ ok: true, message: `Shelly name correctly set to ${shelly_set_name.name}` })
-            wsS_clients_shellyDisovery.emit('ShellyNameUpdate')
+            emitWSSDiscoveryEvent('ShellyNameUpdate', shelly_set_name)
         }
         else {
             throw new Error("Internal server error " + success.error)

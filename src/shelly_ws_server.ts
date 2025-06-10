@@ -1,12 +1,18 @@
-import { WebSocket } from "ws";
-import { wsS_clients } from "./server.js";
-import { wsS_shelly } from "./server.js";
-import { IncomingMessage } from "http";
-import { ShellyInformation, ShellyClosing } from "./utils/types.js";
+import { WebSocket, WebSocketServer } from "ws";
+import { wsS_clients } from "./client_ws_server.js";
+import { IncomingMessage, Server, ServerResponse } from "http";
+import type { ShellyInformation, ShellyClosing } from "./utils/types.js";
 import { getShellyConfig } from "./utils/utils.js";
 
+export let wsS_shelly: WebSocketServer
 
-export function addShellyWSSListeners() {
+export function createAndAddShellyWSSListeners() {
+
+    wsS_shelly = new WebSocketServer({ port: process.env.SHELLY_WEBSOCKET_SERVER_PORT }, () => {
+
+        console.log("Shelly WSS has been started")
+
+    })
 
     wsS_shelly.on('close', () => {
         console.log("WebSocket Shelly Server connection closed")
@@ -66,7 +72,7 @@ export function addShellyWSSListeners() {
             else if (socket.connected_device_information.which_shelly?.id !== null)
                 message.id = socket.connected_device_information.which_shelly?.id
 
-            wsS_clients.clients.forEach((client) => {
+            wsS_clients.clients.forEach((client: WebSocket) => {
                 client.send(JSON.stringify(message))
             })
         })

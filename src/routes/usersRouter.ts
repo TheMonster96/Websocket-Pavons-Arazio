@@ -1,6 +1,6 @@
-import { Request, Response, Router } from "express";
+import { type Request, type Response, Router } from "express";
 import { isAuthenticated } from "../sessionHandling/sessionHandler.js";
-import { DB_Result, User } from "../utils/types.js";
+import type { DB_Result, User } from "../utils/types.js";
 import { assert } from "console";
 import { checkCredentials, createUser } from "../databaseHandling/dbConnection.js";
 import { computeSHA256, getMessageByStatusCode } from "../utils/utils.js";

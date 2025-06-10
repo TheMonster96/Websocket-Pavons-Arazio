@@ -2,13 +2,18 @@
 import { WebSocket } from "ws"
 import { config } from "dotenv"
 import path from "node:path"
-import { ShellyAPI_Response, ShellyFailedAPI_Response, ShellySetName, ShellySetWS } from "./types.js"
+import type { ShellyAPI_Response, ShellyFailedAPI_Response, ShellySetName, ShellySetWS } from "./types.js"
 import { allowedRefererURLs } from "../express-app.js"
 import { createHash } from "node:crypto"
 import { assert } from "node:console"
+import { wsS_clients_shellyDisovery } from "../discovery_ws_server.js"
+import { wsS_shelly } from "../shelly_ws_server.js"
 
 
 //export const shelly_devices = await readDevices()
+export function emitWSSDiscoveryEvent(eventType: string, data: Object) {
+    wsS_clients_shellyDisovery.emit(eventType, (data))
+}
 
 export function getShellyAddressFromNameOrID(search_value: string, set: Set<WebSocket>) {
     for (const [key, value] of set.entries()) {
@@ -21,8 +26,8 @@ export function getShellyAddressFromNameOrID(search_value: string, set: Set<WebS
     return false
 }
 
-export function updateShellyDeviceInfo(new_name: string, search_address: string, set: Set<WebSocket>) {
-    for (const [key, value] of set.entries()) {
+export function updateShellyDeviceInfo(new_name: string, search_address: string) {
+    for (const [key, value] of wsS_shelly.clients.entries()) {
         const shelly_address = value.connected_device_information.remote_address
         if (Object.is(shelly_address, search_address)) {
             //assert(typeof key.connected_device_information.which_shelly !== undefined)
@@ -77,12 +82,6 @@ export async function getShellyConfig(shellyAddress: string | undefined) {
 
 }
 
-export function get__dirname() {
-    let __dirname = path.dirname(new URL(import.meta.url).pathname)
-    __dirname = __dirname.substring(1, __dirname.length)
-
-    return __dirname
-}
 
 export function dotenvConf(__dirname: string, depth?: number) {
 
