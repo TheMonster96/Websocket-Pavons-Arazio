@@ -4,12 +4,17 @@ import { isAuthenticated, sessionInitialization } from "./sessionHandling/sessio
 import { router as apiRouter } from "./routes/apiRouter.js"
 import { router as userRouter } from "./routes/usersRouter.js"
 
-export const allowedRefererURLs = ["/api/v1/shellyAdd", "/api/v1/shellyUpdateName", "/api/v1/refreshDiscovery"]
+export const allowedRefererURLs = ["/api/v1/shellyAdd", "/api/v1/refreshDiscovery"]
 export const allowedOrigins = ["http://localhost:3000", "http://localhost:8888", "http://192.168.1.2", "https://localhost:3000",
     "https://localhost:8888", "https://192.168.1.2:3000", "http://192.168.1.125", "http://192.168.1.133"]
 
 
-
+/**
+ * 
+ * This function is used to create an Express server and add all listeners. It's then called in the httpsServer.ts file
+ * when creating the HTTPS server.
+ * 
+ */
 
 export function createAndAddExpressListeners() {
 
@@ -40,10 +45,7 @@ export function createAndAddExpressListeners() {
         credentials: false
     }))
 
-
-
     app.use('/', userRouter)
-
 
     app.use('/api', apiRouter)
 

@@ -52,8 +52,6 @@ ws.addEventListener("message", message => {
         else
             shelly.setAttribute('id', 'no name')
 
-
-
         shelly.addEventListener('click', (e) => {
             e.preventDefault()
 
@@ -66,12 +64,8 @@ ws.addEventListener("message", message => {
             ws.send(msg)
         })
 
-
-
         shelly_devices.push(shelly)
-
         document.body.appendChild(shelly)
-
     }
 
     else if (msg.is_closed) {

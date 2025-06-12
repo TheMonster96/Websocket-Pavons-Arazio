@@ -15,12 +15,11 @@
     <button>Go to home</button>
 </a>
 <br><br>
-<button id="ws_test_button">ws test button</button>
 {{#if shelly_devices}}
 <form action="/api/v1/shellyAdd" method="post">
+    <p> Select a shelly device</p>
+    <select name="shelly_device" id="shelly_devices" required>
 
-    <select name="shelly_device" required>
-        <option disabled> Select a Shelly Device</option>
         {{#each shelly_devices}}
 
         <option value="{{this.address}}">
@@ -40,8 +39,8 @@
 {{/if}}
 <br><br>
 
-<a href="/api/v1/refresher">
-    <button>Refresh list</button>
-</a>
+<form action="/api/v1/refresher" method="GET">
+    <input type="Submit" Value="Refresh List" />
+</form>
 
 </html>

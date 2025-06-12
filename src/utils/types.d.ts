@@ -20,10 +20,14 @@ declare module "ws" {
 declare global {
     namespace NodeJS {
         interface ProcessEnv {
-            TLS_CERTIFICATE: string,
-            TLS_CERTIFICATE_KEY: string,
+            HTTPS_TLS_CERTIFICATE: string,
+            HTTPS_TLS_CERTIFICATE_KEY: string,
+            WSS_TLS_CERTIFICATE: string,
+            WSS_TLS_CERTIFICATE_KEY: string,
             HTTPS_SERVER_PORT: number,
-            TLS_CA_PATH?: string,
+            CA_PRIVATE_KEY: string,
+            CA_CERTIFICATE: string,
+            CERT_BUNDLE: string,
             NODE_ENV: 'development' | 'production' | 'test',
             SHELLY_WEBSOCKET_SERVER_PORT: number,
             HOST_SHELLY_WSS_ADDRESS: string
@@ -75,7 +79,10 @@ interface ShellySetWS {
 
 interface Certificates {
     key: Buffer,
-    cert: Buffer
+    cert: Buffer,
+    ca?: Buffer,
+    rejectUnauthorized?: boolean,
+    requestCert?: boolean
 }
 
 interface ShellyDiscovery {

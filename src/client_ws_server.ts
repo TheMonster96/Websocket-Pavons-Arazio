@@ -47,53 +47,53 @@ export function createAndAddClientWSSListeners() {
         socket.connected_device_information = { is_client: true, remote_address: ((remote_address === '') ? "::1" : remote_address) }
         /**
          * 
-         * 
          *  Dynamically sends connected Shellies to every client that has just connected
-         * 
-         *  TODO: Implement logic to dynamically send new Shellies as they connect
-         *  
-         * 
          */
 
         wsS_shelly.clients.forEach((shelly_client: WebSocket) => {
-            if (shelly_client.connected_device_information.is_shelly) {
-                //console.log(shelly_client.connected_device_information)
-                let message: ShellyInformation = {
-                    shelly_information: true,
-                    state: shelly_client.connected_device_information.state
+            if (shelly_client.connected_device_information) {
+                if (shelly_client.connected_device_information.is_shelly) {
+                    //console.log(shelly_client.connected_device_information)
+                    let message: ShellyInformation = {
+                        shelly_information: true,
+                        state: shelly_client.connected_device_information.state
+                    }
+                    if (shelly_client.connected_device_information.which_shelly?.name !== null)
+                        message.name = shelly_client.connected_device_information.which_shelly?.name
+                    else if (shelly_client.connected_device_information.which_shelly?.id !== null)
+                        message.id = shelly_client.connected_device_information.which_shelly?.id
+                    socket.send(JSON.stringify(message))
                 }
-                if (shelly_client.connected_device_information.which_shelly?.name !== null)
-                    message.name = shelly_client.connected_device_information.which_shelly?.name
-                else if (shelly_client.connected_device_information.which_shelly?.id !== null)
-                    message.id = shelly_client.connected_device_information.which_shelly?.id
-                socket.send(JSON.stringify(message))
             }
         })
 
 
         wsS_shelly.clients.forEach((shelly_client: WebSocket) => {
-            if (shelly_client.connected_device_information.is_shelly) {
-                //console.log(shelly_client.connected_device_information)
-                shelly_client.send(JSON.stringify({
-                    /*{
-                        "jsonrpc":"2.0",
-                        "id": 1,
-                        "src":"user_1",
-                        "method":"Switch.GetConfig",
-                        "params": {
-                            "id":2
+            if (shelly_client.connected_device_information) {
+                if (shelly_client.connected_device_information.is_shelly) {
+                    //console.log(shelly_client.connected_device_information)
+                    shelly_client.send(JSON.stringify({
+                        /*{
+                            "jsonrpc":"2.0",
+                            "id": 1,
+                            "src":"user_1",
+                            "method":"Switch.GetConfig",
+                            "params": {
+                                "id":2
+                            }
+                          }  
+                            */
+                        id: 1,
+                        src: "WS server",
+                        method: "Switch.GetStatus",
+                        params: {
+                            id: 0
                         }
-                      }  
-                        */
-                    id: 1,
-                    src: "WS server",
-                    method: "Switch.GetStatus",
-                    params: {
-                        id: 0
-                    }
-                }))
+                    }))
+                }
             }
         })
+
 
         console.log(socket.connected_device_information)
 

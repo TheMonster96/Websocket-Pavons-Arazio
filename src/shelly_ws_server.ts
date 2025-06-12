@@ -1,14 +1,30 @@
 import { WebSocket, WebSocketServer } from "ws";
 import { wsS_clients } from "./client_ws_server.js";
 import { IncomingMessage, Server, ServerResponse } from "http";
-import type { ShellyInformation, ShellyClosing } from "./utils/types.js";
+import type { ShellyInformation, ShellyClosing, ShellySetName, Certificates } from "./utils/types.js";
 import { getShellyConfig } from "./utils/utils.js";
+import { readFileSync } from "fs";
+import { createServer } from "https";
 
 export let wsS_shelly: WebSocketServer
 
-export function createAndAddShellyWSSListeners() {
 
-    wsS_shelly = new WebSocketServer({ port: process.env.SHELLY_WEBSOCKET_SERVER_PORT }, () => {
+
+export function createAndAddShellyWSSListeners() {
+    const wss_options: Certificates = {
+        key: readFileSync(process.env.WSS_TLS_CERTIFICATE_KEY),
+        ca: readFileSync(process.env.CA_CERTIFICATE),
+        cert: readFileSync(process.env.WSS_TLS_CERTIFICATE),
+        rejectUnauthorized: true
+    }
+
+    /**
+     * This TLS Server is being used just to add TLS to the WSS since it's not natively supported
+     */
+
+    const tls_server = createServer(wss_options)
+
+    wsS_shelly = new WebSocketServer({ server: tls_server }, () => {
 
         console.log("Shelly WSS has been started")
 
@@ -16,6 +32,44 @@ export function createAndAddShellyWSSListeners() {
 
     wsS_shelly.on('close', () => {
         console.log("WebSocket Shelly Server connection closed")
+    })
+
+    wsS_shelly.on("error", (error: { name: string; message: any; stack: any; cause: any; }) => {
+        console.log("WS Shelly Server? error : " + error.name)
+        console.log(error.message)
+        console.log(error.stack)
+        console.log(error.cause)
+    })
+
+    wsS_shelly.on("wsClientError", (error: { name: string; message: any; stack: any; cause: any; }) => {
+        console.log("WS Shelly error : " + error.name)
+        console.log(error.message)
+        console.log(error.stack)
+        console.log(error.cause)
+
+    })
+
+    wsS_shelly.on('NameUpdate', (updatedShelly: ShellySetName) => {
+        let update = false
+        let oldShelly: WebSocket
+        wsS_shelly.clients.forEach((shelly: WebSocket) => {
+            if (shelly.connected_device_information.remote_address === updatedShelly.address) {
+                shelly.connected_device_information.which_shelly!.name = updatedShelly.name
+                oldShelly = shelly
+                update = true
+            }
+        })
+
+        if (update) {
+            wsS_clients.clients.forEach((client: WebSocket) => {
+                client.send(JSON.stringify({
+                    old_shelly_name: oldShelly.connected_device_information.which_shelly?.name,
+                    new_shelly_name: updatedShelly.name,
+                    address: updatedShelly.address
+                }))
+            })
+        }
+
     })
 
     wsS_shelly.on('connection', async function (socket: WebSocket, req: IncomingMessage) {
@@ -140,4 +194,13 @@ export function createAndAddShellyWSSListeners() {
             }
         })
     })
+
+    tls_server.listen({ port: process.env.SHELLY_WEBSOCKET_SERVER_PORT }, () => {
+        console.log("TLS Server and WSS Shelly started")
+    })
 }
+
+export function getConnectedShellys() {
+    return wsS_shelly.clients
+}
+

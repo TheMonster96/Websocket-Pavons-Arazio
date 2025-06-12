@@ -1,5 +1,4 @@
 import { type Request, type Response, Router } from "express";
-import { isAuthenticated } from "../sessionHandling/sessionHandler.js";
 import type { DB_Result, User } from "../utils/types.js";
 import { assert } from "console";
 import { checkCredentials, createUser } from "../databaseHandling/dbConnection.js";

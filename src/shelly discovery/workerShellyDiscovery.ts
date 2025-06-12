@@ -9,6 +9,7 @@ async function callShellyApi() {
     const baseIPAddress = workerData.baseIPAddress
     const startIPAddress = workerData.startIPAddress
     const endIPAddress = workerData.endIPAddress
+    const useCase = workerData.use
 
     //console.log(baseIPAddress, startIPAddress, endIPAddress)
 
@@ -28,7 +29,7 @@ async function callShellyApi() {
             if (result.ok) {
                 let json = await result.json()
 
-                if (json.ws.server === process.env.HOST_SHELLY_WSS_ADDRESS && !checkIfNotAlreadyExists(json.sys.device.name, json.wifi.ap.ssid)) {
+                if (json.ws.server !== process.env.HOST_SHELLY_WSS_ADDRESS && !checkIfNotAlreadyExists(json.sys.device.name, json.wifi.ap.ssid)) {
                     console.log("Can be sent ")
                     let message: ShellyAPI_Response = {
                         name: json.sys.device.name,
@@ -38,9 +39,10 @@ async function callShellyApi() {
                     }
                     parentPort?.postMessage(message)
                 }
+
             }
             else {
-                console.log("motti buttana")
+
                 throw new Error(`Error contacting shelly Shelly.GetConfig api ${result.status} \n ${result.statusText}`)
             }
         }

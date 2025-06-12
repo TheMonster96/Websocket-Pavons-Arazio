@@ -1,5 +1,5 @@
 import { type Request, type Response, Router } from "express";
-import { wsS_shelly } from "../shelly_ws_server.js";
+import { getConnectedShellys, wsS_shelly } from "../shelly_ws_server.js";
 import { getFoundShellys, refreshDiscoveryInterval } from "../shelly discovery/shellyDiscovery.js";
 import type { ShellySetWS, ShellyFailedAPI_Response, ShellySetName } from "../utils/types.js";
 import { SetShellyWSS, setShellyName, updateShellyDeviceInfo, isValidRefererURL, emitWSSDiscoveryEvent } from "../utils/utils.js";
@@ -55,7 +55,7 @@ router.route('/v1/shellyUpdateName')
 
     .get(async (req: Request, res: Response) => {
         //console.log(result.text)
-        const results = getFoundShellys()
+        const results = getConnectedShellys()
         //console.log(results)
         res.render('shellyUpdateName', { shelly_devices: results })
     })
@@ -84,7 +84,7 @@ router.route('/v1/shellyUpdateName')
         if (success.success) {
             updateShellyDeviceInfo(shelly_set_name.name, shelly_set_name.address)
             res.status(200).json({ ok: true, message: `Shelly name correctly set to ${shelly_set_name.name}` })
-            emitWSSDiscoveryEvent('ShellyNameUpdate', shelly_set_name)
+            //emitWSSDiscoveryEvent('ShellyNameUpdate', shelly_set_name)
         }
         else {
             throw new Error("Internal server error " + success.error)
@@ -96,18 +96,34 @@ router.route('/v1/shellyUpdateName')
 
 router.get('/v1/refresher', async (req: Request, res: Response) => {
     try {
+        //console.log(req.headers.referer)
+        //console.log(req.headers.origin)
         await refreshDiscoveryInterval()
-        const previous_url = req.headers.referer
-        console.log(previous_url)
-        console.log(req.headers.origin)
+        const refererSplit = req.headers.referer?.split('/')
+        console.log(refererSplit)
+        let previous_url = ""
+
+        for (let i = 3; i < refererSplit?.length!; i++) {
+            //console.log(i)
+            previous_url += '/' + refererSplit![i]
+        }
+
+        //console.log(previous_url === true)
+
         //res.json(previous_url)
-        if (previous_url && isValidRefererURL(previous_url))
-            res.redirect(previous_url)
-        else
-            res.sendStatus(403).send("Forbidden operation, you need to pass from an allowed endpoint")
+        if (isValidRefererURL(previous_url)) {
+            console.log("URL is valid " + req.session.username)
+            res.redirect(303, previous_url)
+        }
+
+        else {
+            console.log("URL is not valid")
+            res.status(403).send("Forbidden operation, you need to pass from an allowed endpoint")
+        }
+
     }
     catch (error) {
-        res.status(500).send(error)
+        res.status(500).send("Cazzarola " + error)
     }
 })
 

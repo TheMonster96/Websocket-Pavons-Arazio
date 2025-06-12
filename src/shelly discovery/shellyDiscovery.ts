@@ -11,10 +11,13 @@ let shellyDiscoveryInterval: NodeJS.Timeout
 const defaultSplitFactor: number = 16
 
 let foundShellys: ShellyDiscovery = { shellies: [], initialization_time: 0, last_update: 0 }
+
 let firstExecution: boolean = true
 
 let baseIpAddress = "192.168.1."
 const addressRange = 256
+
+let splitAddressIntervalsArray: number[] = []
 
 let isRefreshing: boolean = false
 
@@ -48,6 +51,10 @@ export function checkIfNotAlreadyExists(shelly_name: string | undefined, shelly_
 
 function splitAddressIntervals(splitFactor: number): number[] {
     //assert(splitFactor <= 64 && splitFactor % 8)
+    if (splitAddressIntervalsArray.length > 0) {
+        return splitAddressIntervalsArray
+    }
+
     let splitAddresses: number[] = [0]
     let address: number = addressRange / splitFactor
     for (let i = 1; i <= splitFactor; i++) {
@@ -58,6 +65,7 @@ function splitAddressIntervals(splitFactor: number): number[] {
     }
 
     console.log(splitAddresses.toString())
+    splitAddressIntervalsArray = splitAddresses
 
     return splitAddresses
 }
@@ -75,18 +83,21 @@ function splitAddressIntervals(splitFactor: number): number[] {
  * 
  */
 
-export async function shellyDiscovery(splitFactor: number = defaultSplitFactor, refresh?: boolean) {
+export async function shellyDiscovery(splitFactor: number = defaultSplitFactor, refresh?: boolean, use: string = "Scan") {
+
+
     foundShellys.shellies = await new Promise((resolve, reject) => {
         let results: ShellyAPI_Response[] = []
         let thread_counter = 0
 
-        splitAddressIntervals(splitFactor).forEach((address, index, array) => {
+        splitAddressIntervals(splitFactor).forEach((address: number, index: number, array: number[]) => {
             if (index !== array.length - 1) {
                 const worker = new Worker(path.join(import.meta.dirname, "./workerShellyDiscovery.js"), {
                     workerData: {
                         baseIPAddress: baseIpAddress,
                         startIPAddress: index === 0 ? address + 1 : address,
-                        endIPAddress: array[index + 1] - 1
+                        endIPAddress: array[index + 1] - 1,
+                        use: use
                     }
                 })
 
@@ -129,18 +140,20 @@ export async function shellyDiscovery(splitFactor: number = defaultSplitFactor, 
 
             }
         })
-
-    });
+    })
 
     if (!refresh) {
         wsS_clients_shellyDisovery.emit('DiscoveryUpdate', foundShellys.shellies)
     }
-    /*if (foundShellys.initialization_time === 0) {
-        foundShellys.initialization_time = Date.now()
-    }
+};
 
-    foundShellys.last_update = Date.now()*/
+
+/*if (foundShellys.initialization_time === 0) {
+    foundShellys.initialization_time = Date.now()
 }
+
+foundShellys.last_update = Date.now()*/
+
 
 export async function startDiscoveryInterval(splitFactor: number) {
     if (firstExecution) {
@@ -162,7 +175,7 @@ export async function refreshDiscoveryInterval() {
         shellyDiscoveryInterval.refresh()
         await shellyDiscovery()
         isRefreshing = false
-        emitWSSDiscoveryEvent('Refresh', foundShellys)
+        //emitWSSDiscoveryEvent('Refresh', foundShellys)
     }
 }
 
@@ -173,6 +186,7 @@ export function getFoundShellys(): ShellyAPI_Response[] | undefined | [] {
     }
     return undefined
 }
+
 
 export function removeShelly() {
     if (foundShellys.shellies?.length !== 0) {

@@ -32,7 +32,7 @@ export function createAndAddShellyDisoveryWSSListeners() {
         console.log(error.cause)
     })
 
-    wsS_clients_shellyDisovery.on('ShellyNameUpdate', (nameChangeShelly: string) => {
+    /*wsS_clients_shellyDisovery.on('ShellyNameUpdate', (nameChangeShelly: string) => {
         const shelly = JSON.parse(nameChangeShelly)
 
         console.log("Shelly name change event fired, new name: " + (shelly))
@@ -46,7 +46,7 @@ export function createAndAddShellyDisoveryWSSListeners() {
                 }
             ))
         })
-    })
+    })*/
 
     wsS_clients_shellyDisovery.on('Refresh', (discoveryData: ShellyAPI_Response[]) => {
 

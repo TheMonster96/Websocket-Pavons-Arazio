@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "start": "nodemon ./dist/server",
+    "start-no-watch": "node ./dist/server",
     "compile": "npx tsc"
   },
   "repository": {
