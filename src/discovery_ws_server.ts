@@ -1,7 +1,7 @@
 import { WebSocket, WebSocketServer } from "ws";
 //import { wsS_clients_shellyDisovery } from "./server.js";
 import { IncomingMessage } from "http";
-import { ShellyAPI_Response, ShellySetWS } from "./utils/types.js";
+import { ShellyDevice, ShellySetWS } from "./utils/types.js";
 
 export let wsS_clients_shellyDisovery: WebSocketServer
 
@@ -48,9 +48,9 @@ export function createAndAddShellyDisoveryWSSListeners() {
         })
     })*/
 
-    wsS_clients_shellyDisovery.on('Refresh', (discoveryData: ShellyAPI_Response[]) => {
+    wsS_clients_shellyDisovery.on('Refresh', (discoveryData: ShellyDevice[]) => {
 
-        let newShellys: ShellyAPI_Response[] = []
+        let newShellys: ShellyDevice[] = []
         discoveryData.forEach((shelly) => {
             console.log("New Shelly : " + shelly.id)
             newShellys.push(JSON.parse(JSON.stringify(shelly)))
@@ -71,7 +71,7 @@ export function createAndAddShellyDisoveryWSSListeners() {
         })
     })
 
-    wsS_clients_shellyDisovery.on('DiscoveryUpdate', (discoveryData: ShellyAPI_Response[]) => {
+    wsS_clients_shellyDisovery.on('DiscoveryUpdate', (discoveryData: ShellyDevice[]) => {
 
         console.log("Discovery completed, new scan :  \n ", (discoveryData))
         console.log("WSS Discovery connected clients count : ", wsS_clients_shellyDisovery.clients.size)

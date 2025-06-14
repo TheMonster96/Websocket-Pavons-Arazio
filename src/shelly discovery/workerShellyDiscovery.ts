@@ -1,6 +1,6 @@
 import { response } from "express"
 import { workerData, parentPort } from "node:worker_threads"
-import type { ShellyAPI_Response } from "../utils/types.js"
+import type { ShellyDevice } from "../utils/types.js"
 import { checkIfNotAlreadyExists } from "./shellyDiscovery.js"
 
 
@@ -31,7 +31,7 @@ async function callShellyApi() {
 
                 if (json.ws.server !== process.env.HOST_SHELLY_WSS_ADDRESS && !checkIfNotAlreadyExists(json.sys.device.name, json.wifi.ap.ssid)) {
                     console.log("Can be sent ")
-                    let message: ShellyAPI_Response = {
+                    let message: ShellyDevice = {
                         name: json.sys.device.name,
                         id: json.wifi.ap.ssid,
                         address: (baseIPAddress + address),

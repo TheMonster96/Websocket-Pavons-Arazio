@@ -2,13 +2,14 @@
 import { WebSocket } from "ws"
 import { config } from "dotenv"
 import path from "node:path"
-import type { ShellyAPI_Response, ShellyFailedAPI_Response, ShellySetName, ShellySetWS } from "./types.js"
+import type { ShellyDevice, ShellyFailedAPI_Response, ShellySetName, ShellySetWS } from "./types.js"
 import { allowedRefererURLs } from "../express-app.js"
 import { createHash } from "node:crypto"
-import { assert } from "node:console"
+import { assert, error } from "node:console"
 import { wsS_clients_shellyDisovery } from "../discovery_ws_server.js"
 import { wsS_shelly } from "../shelly_ws_server.js"
 import { readFileSync } from "node:fs"
+import { getFoundShellys } from "../shelly discovery/shellyDiscovery.js"
 
 
 //export const shelly_devices = await readDevices()
@@ -110,7 +111,7 @@ export function dotenvConf(__dirname: string, depth?: number) {
     config({ path: path.join(__dirname, envPath) })
 }
 
-export function isShellyAPI_Response(response: ShellyAPI_Response): response is ShellyAPI_Response {
+export function isShellyDevice(response: ShellyDevice): response is ShellyDevice {
 
     return typeof response === "object"
         && response !== null
@@ -118,7 +119,6 @@ export function isShellyAPI_Response(response: ShellyAPI_Response): response is 
         && (typeof response.id === "string" || (response.id === null && typeof response.id === "object"))
         && typeof response.address === "string"
         && response.ws !== null && typeof response.ws === "object"
-
 }
 
 /**
@@ -131,10 +131,53 @@ export function isShellyAPI_Response(response: ShellyAPI_Response): response is 
  */
 
 export async function SetShellyWSS(shelly_info: ShellySetWS): Promise<ShellyFailedAPI_Response> {
-    console.log("Address received :" + shelly_info.address + "\n" + "Name received :" + shelly_info.name)
-    //let return_value: ShellyFailedAPI_Response
+
+    const range = getFoundShellys()
+    let shelly_device: ShellyDevice
+    for (let i = 0; i < range?.length!; i++) {
+        if (range![i].address == shelly_info.address) {
+            shelly_device = range![i]
+            break
+        }
+    }
+
+    if (shelly_device! === undefined) {
+        return { success: false, error: new Error("The device might have already been registered or has gone offline") }
+    }
+
+    console.log(typeof shelly_device.cert, typeof shelly_device.cert, typeof shelly_device.ws)
+
+    console.log("Address received :" + shelly_info.address)
+
+    let successful_api_calls = 0
     try {
-        const response_ws_config = await fetch(`http://${shelly_info.address}/rpc/WS.SetConfig?config={"enable": true, "server" : "${process.env.HOST_SHELLY_WSS_ADDRESS}", "ssl_ca": "user_ca.pem" }`, {
+        /*const ca_certificate: Buffer = readFileSync(process.env.CA_CERTIFICATE)
+        console.log(ca_certificate)
+        const response_ca_config = await fetch(`http://${shelly_device!.address}/rpc/Shelly.PutUserCA?data=${ca_certificate.toString('utf-8')}`)
+
+        if (response_ca_config.ok) {
+            console.log(`${shelly_info.name} : ${shelly_info.address} CA TLS config successfully updated `)
+            successful_api_calls++
+        }
+        else {
+            ShellyWSRollback(successful_api_calls + 1, shelly_device)
+            return { success: false, error: new Error(`HTTP Error contacting the Shelly device's API to set the CA certificate: ${response_ca_config.status} \n ${response_ca_config.statusText} `) }
+        }
+
+        const wss_cert: Buffer = readFileSync(process.env.WSS_TLS_CERTIFICATE)
+        console.log(wss_cert)
+        /*const response_cert_config = await fetch(`http://${shelly_info.address}/rpc/Shelly.PutTLSClientCert?data=${wss_cert.toString('utf-8')}`)
+
+        if (response_cert_config.ok) {
+            console.log(`${shelly_info.name} : ${shelly_info.address} TLS Certificate config successfully updated`)
+            successful_api_calls++
+        }
+        else {
+            ShellyWSRollback(successful_api_calls + 1, shelly_device)
+            return { success: false, error: new Error(`HTTP Error contacting the Shelly device's API to set the TLS certificate: ${response_cert_config.status} \n ${response_cert_config.statusText} `) }
+        }*/
+
+        const response_ws_config = await fetch(`http://${shelly_info.address}/rpc/WS.SetConfig?config={"enable": true, "server" : "${process.env.HOST_SHELLY_WSS_ADDRESS}", "ssl_ca": "*" }`, {
             method: "Get",
             signal: AbortSignal.timeout(3000)
         }
@@ -142,40 +185,81 @@ export async function SetShellyWSS(shelly_info: ShellySetWS): Promise<ShellyFail
 
         if (response_ws_config.ok) {
             console.log(`${shelly_info.name} : ${shelly_info.address} WS config successfully updated to ${process.env.HOST_SHELLY_WSS_ADDRESS}`)
-            //return_value = { success: true, error: undefined }
+            successful_api_calls++
         }
         else {
+            ShellyWSRollback(successful_api_calls + 1, shelly_device)
             return { success: false, error: new Error(`HTTP Error contacting the Shelly device's API to set the ws config: ${response_ws_config.status} \n ${response_ws_config.statusText} `) }
-        }
-
-        const ca_bundle: Buffer = readFileSync(process.env.CERT_BUNDLE)
-        const response_ca_config = await fetch(`http://${shelly_info.address}/rpc/Shelly.PutUserCA?data="${ca_bundle}"`)
-
-        if (response_ca_config.ok) {
-            console.log(`${shelly_info.name} : ${shelly_info.address} WS config successfully updated to ${process.env.HOST_SHELLY_WSS_ADDRESS}`)
-            //return_value = { success: true, error: undefined }
-        }
-        else {
-            return { success: false, error: new Error(`HTTP Error contacting the Shelly device's API to set the CA certificate: ${response_ca_config.status} \n ${response_ca_config.statusText} `) }
-        }
-
-        const wss_cert: Buffer = readFileSync(process.env.WSS_TLS_CERTIFICATE)
-        const response_cert_config = await fetch(`http://${shelly_info.address}/rpc/Shelly.PutTLSClientCert?data="${wss_cert}"`)
-
-        if (response_cert_config.ok) {
-            console.log(`${shelly_info.name} : ${shelly_info.address} WS config successfully updated to ${process.env.HOST_SHELLY_WSS_ADDRESS}`)
-            //return_value = { success: true, error: undefined }
-        }
-        else {
-            return { success: false, error: new Error(`HTTP Error contacting the Shelly device's API to set the TLS certificate: ${response_cert_config.status} \n ${response_cert_config.statusText} `) }
         }
 
     } catch (err) {
         console.error(err)
+        ShellyWSRollback(successful_api_calls, shelly_device)
         return { success: false, error: err }
+
     }
 
     return { success: true, error: undefined }
+}
+
+
+async function ShellyWSRollback(failed_at_api_call: number, shelly_device: ShellyDevice) {
+    try {
+        /*let ca_certificate: Buffer | null
+        let cert: Buffer | null
+
+        if (shelly_device.ca_bundle === undefined)
+            ca_certificate = null
+        else
+            ca_certificate = shelly_device.ca_bundle
+
+        if (shelly_device.cert === undefined)
+            cert = null
+        else
+            cert = shelly_device.cert
+
+        if (failed_at_api_call >= 1) {
+            const response_ca_config = await fetch(`http://${shelly_device!.address}/rpc/Shelly.PutUserCA?data=${ca_certificate!.toString('utf-8')}`)
+
+            if (response_ca_config.ok) {
+                console.log(`${shelly_device.name} : ${shelly_device.address} CA TLS config successfully reconfigured `)
+            }
+            else {
+                return { success: false, error: new Error(`Rollback Failed. Required manual repair. HTTP Error contacting the Shelly device's API to set the CA certificate: ${response_ca_config.status} \n ${response_ca_config.statusText} `) }
+            }
+        }
+
+        if (failed_at_api_call >= 2) {
+            const response_cert_config = await fetch(`http://${shelly_device.address}/rpc/Shelly.PutTLSClientCert?data=${cert!.toString('utf-8')}`)
+
+            if (response_cert_config.ok) {
+                console.log(`${shelly_device.name} : ${shelly_device.address} TLS Certificate config successfully reconfigured `)
+            }
+            else {
+
+                return { success: false, error: new Error(`Rollback Failed. Required manual repair. HTTP Error contacting the Shelly device's API to set the TLS certificate: ${response_cert_config.status} \n ${response_cert_config.statusText} `) }
+            }
+        }
+
+        if (failed_at_api_call = 3) {
+        */
+        const response_ws_config = await fetch(`http://${shelly_device.address}/rpc/WS.SetConfig?config={"enable": true, "server" : "${shelly_device.ws.server}", "ssl_ca": "*" }`, {
+            method: "Get",
+            signal: AbortSignal.timeout(3000)
+        }
+        )
+
+        if (response_ws_config.ok) {
+            console.log(`${shelly_device.name} : ${shelly_device.address} WS config successfully reconfigured to ${shelly_device.ws}`)
+        }
+        else {
+            return { success: false, error: new Error(`Rollback Failed. Required manual repair. HTTP Error contacting the Shelly device's API to set the ws config: ${response_ws_config.status} \n ${response_ws_config.statusText} `) }
+        }
+    }
+    catch (err) {
+        console.log(err)
+        return { success: false, error: err + " Rollback failed, will have to setup the device manually" }
+    }
 }
 
 /**

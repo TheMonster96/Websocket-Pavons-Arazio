@@ -22,9 +22,9 @@ export function createAndAddShellyWSSListeners() {
      * This TLS Server is being used just to add TLS to the WSS since it's not natively supported
      */
 
-    const tls_server = createServer(wss_options)
+    //const tls_server = createServer(wss_options)
 
-    wsS_shelly = new WebSocketServer({ server: tls_server }, () => {
+    wsS_shelly = new WebSocketServer({ port: process.env.SHELLY_WEBSOCKET_SERVER_PORT }, () => {
 
         console.log("Shelly WSS has been started")
 
@@ -195,9 +195,15 @@ export function createAndAddShellyWSSListeners() {
         })
     })
 
+    /*tls_server.on('upgrade', (request, socket, head) => {
+        wsS_shelly.handleUpgrade(request, socket, head, socket => {
+            wsS_shelly.emit('connection', socket, request)
+        })
+    })
+
     tls_server.listen({ port: process.env.SHELLY_WEBSOCKET_SERVER_PORT }, () => {
         console.log("TLS Server and WSS Shelly started")
-    })
+    })*/
 }
 
 export function getConnectedShellys() {

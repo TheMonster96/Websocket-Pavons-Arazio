@@ -1,8 +1,8 @@
 import { assert } from "node:console"
 import path from "node:path"
 import { Worker } from "node:worker_threads"
-import type { ShellyAPI_Response, ShellyDiscovery } from "../utils/types.js"
-import { emitWSSDiscoveryEvent, isShellyAPI_Response } from "../utils/utils.js"
+import type { ShellyDevice, ShellyDiscovery } from "../utils/types.js"
+import { emitWSSDiscoveryEvent, isShellyDevice } from "../utils/utils.js"
 import { wsS_clients_shellyDisovery } from "../discovery_ws_server.js"
 //import { wsS_clients_shellyDisovery } from "../server.js"
 
@@ -87,7 +87,7 @@ export async function shellyDiscovery(splitFactor: number = defaultSplitFactor, 
 
 
     foundShellys.shellies = await new Promise((resolve, reject) => {
-        let results: ShellyAPI_Response[] = []
+        let results: ShellyDevice[] = []
         let thread_counter = 0
 
         splitAddressIntervals(splitFactor).forEach((address: number, index: number, array: number[]) => {
@@ -106,7 +106,7 @@ export async function shellyDiscovery(splitFactor: number = defaultSplitFactor, 
                     if (typeof message === "string" && message === "done")
                         thread_counter++
 
-                    else if (isShellyAPI_Response(message)) {
+                    else if (isShellyDevice(message)) {
                         console.log(message)
                         results.push(message)
                         //resolve(message)
@@ -179,7 +179,7 @@ export async function refreshDiscoveryInterval() {
     }
 }
 
-export function getFoundShellys(): ShellyAPI_Response[] | undefined | [] {
+export function getFoundShellys(): ShellyDevice[] | undefined | [] {
     //console.log(foundShellys.shellies?.length)
     if (foundShellys.shellies?.length !== 0) {
         return foundShellys.shellies

@@ -5,14 +5,14 @@ declare module "ws" {
     interface WebSocket {
         connected_device_information: {
             is_shelly?: boolean,
-            username?: string,
-            is_client?: boolean,
             remote_address?: String,
             which_shelly?: {
                 name?: string,
                 id?: string
             },
             state?: boolean
+            username?: string,
+            is_client?: boolean,
         }
     }
 }
@@ -56,11 +56,17 @@ interface ShellyClosing {
     id?: string
 }
 
-interface ShellyAPI_Response {
+interface ShellyDevice {
     name: string,
     id: string,
     address: string,
-    ws: object
+    ws: {
+        enable: boolean,
+        server: string,
+        ssl_ca: string
+    },
+    ca_bundle?: Buffer,
+    cert?: Buffer
 }
 
 interface ShellyFailedAPI_Response {
@@ -74,7 +80,7 @@ interface ShellySetName {
 
 interface ShellySetWS {
     name: string,
-    address: string
+    address: string,
 }
 
 interface Certificates {
