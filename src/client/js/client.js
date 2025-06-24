@@ -1,6 +1,10 @@
 //const form_button=document.getElementById("form_button")
 
 const shelly_devices = []
+const shelly_container = document.getElementById('shelly-container')
+let shelly_container_row = document.createElement('div')
+let shelly_container_col = document.createElement('div')
+
 
 const ws = new WebSocket("wss://192.168.1.2:3000/home")
 console.log(ws)
@@ -41,7 +45,12 @@ ws.addEventListener("message", message => {
 
     if (msg.shelly_information) {
         console.log("adding new shelly")
-        const shelly = document.createElement("img")
+
+        const shelly = document.createElement('img')
+        const shelly_name = document.createElement('div')
+
+        shelly.className = "img-fluid"
+        shelly.style = "max-width: 15%; max-height: 15%"
 
         shelly.setAttribute('src', (msg.state ? "/public/B_On.svg" : "/public/B_Off.svg"))
         shelly.setAttribute('state', msg.state)
@@ -51,6 +60,8 @@ ws.addEventListener("message", message => {
             shelly.setAttribute('id', msg.id)
         else
             shelly.setAttribute('id', 'no name')
+
+        shelly_name.innerHTML = shelly.getAttribute('id')
 
         shelly.addEventListener('click', (e) => {
             e.preventDefault()
@@ -64,8 +75,18 @@ ws.addEventListener("message", message => {
             ws.send(msg)
         })
 
+        if (shelly_devices.length === 0) {
+            shelly_container_row.className = "row justify-content-start justify-content-center justify-content-end"
+            shelly_container_row.style = "margin-top: 20px"
+            shelly_container_row.appendChild(shelly_container_col)
+            shelly_container.appendChild(shelly_container_row)
+        }
+
         shelly_devices.push(shelly)
-        document.body.appendChild(shelly)
+
+        shelly_container_col.appendChild(shelly)
+        shelly_container_col.appendChild(shelly_name)
+        //document.body.appendChild(shelly)
     }
 
     else if (msg.is_closed) {

@@ -125,16 +125,19 @@ export function createAndAddClientWSSListeners() {
                 console.log(shelly_address)
                 if (shelly_address) {
                     wsS_shelly.clients.forEach((shelly: WebSocket) => {
-                        if (shelly.connected_device_information.is_shelly && shelly.connected_device_information.remote_address === shelly_address) {
-                            shelly.send(JSON.stringify({
-                                id: 1,
-                                src: "WS server / " + socket.connected_device_information.remote_address,
-                                method: "Switch.Toggle",
-                                params: {
-                                    id: 0
-                                }
-                            }))
+                        if (shelly.connected_device_information) {
+                            if (shelly.connected_device_information.is_shelly && shelly.connected_device_information.remote_address === shelly_address) {
+                                shelly.send(JSON.stringify({
+                                    id: 1,
+                                    src: "WS server / " + socket.connected_device_information.remote_address,
+                                    method: "Switch.Toggle",
+                                    params: {
+                                        id: 0
+                                    }
+                                }))
+                            }
                         }
+
 
                     })
                 }

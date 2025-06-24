@@ -5,35 +5,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script defer src="/public/js/client.js"></script>
-    <link href="/public/style.css" rel="stylesheet">
+    <link href="/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <title>Home</title>
 </head>
 
 <body>
-    <!--<form id="form">
-        <input type="text" id="msg">
-        <input type="submit" id="button" value="Manda Messaggio">
-    </form>
+    <div class="container-sm text-center" id="shelly-container">
+        <div class="row">
+            <div class="col">
+                <div class="h1">
+                    <p>Welcome, {{username}}</p>
+                </div>
+            </div>
+        </div>
 
-
-    <button id="shelly_button">Shelly Button</button>
-    <button id="form_button">ssd</button>-->
-
-    <!--<img src="/public/B_Off.svg" id="shelly_button"/>-->
-
-    {{!--{{#if shelly_devices}}
-    {{#each shelly_devices}}
-    <img class="shelly" src="/public/B_Off.svg" id="{{[1]}}" alt="{{[1]}}" />
-    {{/each}}
-    {{/if}}--}}
-    <!--<form action="/shellyAdd">
-        <input type="submit" value="Add unregistered Shellys"></input>
-    </form>-->
-    <p>Welcome {{username}}</p>
-    <a href="/api/v1/shellyAdd">
-        <button>Add Shellys</button>
-    </a>
-
+        <div class="row">
+            <div class="col">
+                <a href="/api/v1/shellyAdd">
+                    <button>Add Shellys</button>
+                </a>
+            </div>
+        </div>
+    </div>
     <br><br>
 </body>
 

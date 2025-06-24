@@ -6,10 +6,9 @@ import { checkIfNotAlreadyExists } from "./shellyDiscovery.js"
 
 async function callShellyApi() {
 
-    const baseIPAddress = workerData.baseIPAddress
+    const baseIPAddress = process.env.DEFAULT_BASE_IP_ADDRESS
     const startIPAddress = workerData.startIPAddress
     const endIPAddress = workerData.endIPAddress
-    const useCase = workerData.use
 
     //console.log(baseIPAddress, startIPAddress, endIPAddress)
 

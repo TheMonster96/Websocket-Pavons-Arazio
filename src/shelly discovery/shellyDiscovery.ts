@@ -8,13 +8,13 @@ import { wsS_clients_shellyDisovery } from "../discovery_ws_server.js"
 
 
 let shellyDiscoveryInterval: NodeJS.Timeout
-const defaultSplitFactor: number = 16
+const defaultSplitFactor: number = parseInt(process.env.DEFAULT_SPLIT_FACTOR!)
 
 let foundShellys: ShellyDiscovery = { shellies: [], initialization_time: 0, last_update: 0 }
 
 let firstExecution: boolean = true
 
-let baseIpAddress = "192.168.1."
+let baseIpAddress = process.env.DEFAULT_BASE_IP_ADDRESS
 const addressRange = 256
 
 let splitAddressIntervalsArray: number[] = []
@@ -83,7 +83,7 @@ function splitAddressIntervals(splitFactor: number): number[] {
  * 
  */
 
-export async function shellyDiscovery(splitFactor: number = defaultSplitFactor, refresh?: boolean, use: string = "Scan") {
+export async function shellyDiscovery(splitFactor: number = defaultSplitFactor, refresh?: boolean) {
 
 
     foundShellys.shellies = await new Promise((resolve, reject) => {
@@ -97,7 +97,6 @@ export async function shellyDiscovery(splitFactor: number = defaultSplitFactor, 
                         baseIPAddress: baseIpAddress,
                         startIPAddress: index === 0 ? address + 1 : address,
                         endIPAddress: array[index + 1] - 1,
-                        use: use
                     }
                 })
 
@@ -115,8 +114,6 @@ export async function shellyDiscovery(splitFactor: number = defaultSplitFactor, 
                     if (thread_counter === splitFactor) {
                         console.log("Resolving the array")
                         resolve(results)
-
-
                     }
 
 

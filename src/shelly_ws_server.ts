@@ -11,12 +11,12 @@ export let wsS_shelly: WebSocketServer
 
 
 export function createAndAddShellyWSSListeners() {
-    const wss_options: Certificates = {
+    /*const wss_options: Certificates = {
         key: readFileSync(process.env.WSS_TLS_CERTIFICATE_KEY),
         ca: readFileSync(process.env.CA_CERTIFICATE),
         cert: readFileSync(process.env.WSS_TLS_CERTIFICATE),
         rejectUnauthorized: true
-    }
+    }*/
 
     /**
      * This TLS Server is being used just to add TLS to the WSS since it's not natively supported

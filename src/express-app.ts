@@ -34,12 +34,12 @@ export function createAndAddExpressListeners() {
 
     app.use(cors({
         origin: function (origin, callback) {
-            if (!origin || allowedOrigins.includes(origin)) {
-                callback(null, true)
-            }
+            //if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true)
+            /*}
             else {
                 callback(new Error("Non allowed origin"))
-            }
+            }*/
         },
         methods: "GET,PUT,POST,DELETE",
         credentials: false
